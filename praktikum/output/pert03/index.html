@@ -216,14 +216,14 @@
     <main class="app">
       <header class="head">
         <div>
-          <span class="eyebrow">PRAKTIKUM 03 Â· WEBGL2</span>
+          <span class="eyebrow">PRAKTIKUM 03 · WEBGL2</span>
           <h1>Interactive Transformation Playground</h1>
           <p>
             Eksplorasi local/world coordinate, Model Matrix, TRS, pivot,
             parent-child, dan orbit.
           </p>
         </div>
-        <span class="badge" id="status">RUNNING Â· WebGL2</span>
+        <span class="badge" id="status">RUNNING · WebGL2</span>
       </header>
       <div class="layout">
         <section class="stage">
@@ -234,9 +234,9 @@
             <div class="stat">
               Position A<b id="positionInfo">(0.00, 0.00)</b>
             </div>
-            <div class="stat">Rotation A<b id="rotationInfo">0.0Â°</b></div>
+            <div class="stat">Rotation A<b id="rotationInfo">0.0°</b></div>
             <div class="stat">Scale A<b id="scaleInfo">(1.00, 1.00)</b></div>
-            <div class="stat">Order aktif<b id="orderInfo">T Ã— R Ã— S</b></div>
+            <div class="stat">Order aktif<b id="orderInfo">T × R × S</b></div>
             <div class="stat">Delta time<b id="dtInfo">0.000 s</b></div>
             <div class="stat">Matrix uniform<b id="matrixInfo">valid</b></div>
           </div>
@@ -268,7 +268,7 @@
               min="10"
               max="240"
               value="100"
-            /><output id="rotationValue">100Â°/s</output></label
+            /><output id="rotationValue">100°/s</output></label
           ><label class="control"
             ><span>Scale speed</span
             ><input
@@ -302,11 +302,11 @@
             Toggle orbit (O)
           </button>
           <div class="keys">
-            <b>Keyboard</b><br />Arrow: translate Â· Q/E: rotate<br />+/-:
-            uniform scale<br />Z/X: scale X Â· C/V: scale Y<br />1/2/3: preset
-            Â· click: mouse translation
+            <b>Keyboard</b><br />Arrow: translate · Q/E: rotate<br />+/-:
+            uniform scale<br />Z/X: scale X · C/V: scale Y<br />1/2/3: preset
+            · click: mouse translation
           </div>
-          <div class="matrix" id="matrixText">Matrix 3Ã—3 | valid</div>
+          <div class="matrix" id="matrixText">Matrix 3×3 | valid</div>
         </aside>
       </div>
     </main>
