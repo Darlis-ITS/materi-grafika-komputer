@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rotating 3D Cube Camera Playground — Praktikum 4</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="page-header">
+        <div>
+          <span class="eyebrow">PRAKTIKUM 04 · CAMERA & PROJECTION</span>
+          <h1>Rotating 3D Cube Camera Playground</h1>
+          <p>
+            Eksplorasi look-at camera, frustum, projection, dan depth buffer.
+          </p>
+        </div>
+        <span class="status-badge" id="statusBadge">RUNNING · DEPTH ON</span>
+      </header>
+
+      <div class="workspace">
+        <section class="canvas-panel">
+          <div class="canvas-frame">
+            <canvas id="webglCanvas" width="960" height="600"></canvas>
+          </div>
+          <div class="hud-grid">
+            <div class="hud-card">
+              <span>Projection</span><b id="projectionInfo">Perspective</b>
+            </div>
+            <div class="hud-card">
+              <span>Camera</span><b id="cameraInfo">(0.00, 1.20, 5.00)</b>
+            </div>
+            <div class="hud-card"><span>FOV</span><b id="fovInfo">60°</b></div>
+            <div class="hud-card">
+              <span>Near / Far</span><b id="clipInfo">0.10 / 30.00</b>
+            </div>
+            <div class="hud-card">
+              <span>Depth test</span><b id="depthInfo">Enabled</b>
+            </div>
+            <div class="hud-card">
+              <span>Camera mode</span><b id="cameraModeInfo">Manual</b>
+            </div>
+          </div>
+        </section>
+
+        <aside class="control-panel">
+          <span class="eyebrow">PARAMETER CONTROL</span>
+          <label class="range-row" for="fovControl"
+            ><span>FOV perspective</span
+            ><output id="fovValue">60°</output></label
+          >
+          <input id="fovControl" type="range" min="30" max="110" value="60" />
+          <label class="range-row" for="heightControl"
+            ><span>Camera height</span
+            ><output id="heightValue">1.20</output></label
+          >
+          <input
+            id="heightControl"
+            type="range"
+            min="-2"
+            max="4"
+            step="0.05"
+            value="1.2"
+          />
+          <label class="range-row" for="targetXControl"
+            ><span>Target X</span><output id="targetXValue">0.00</output></label
+          >
+          <input
+            id="targetXControl"
+            type="range"
+            min="-2"
+            max="2"
+            step="0.05"
+            value="0"
+          />
+          <label class="range-row" for="targetYControl"
+            ><span>Target Y</span><output id="targetYValue">0.00</output></label
+          >
+          <input
+            id="targetYControl"
+            type="range"
+            min="-2"
+            max="2"
+            step="0.05"
+            value="0"
+          />
+          <div class="button-grid">
+            <button class="primary-button" id="projectionButton">
+              Projection (O)
+            </button>
+            <button id="orbitButton">Orbit (B)</button>
+            <button id="splitButton">Split (X)</button>
+            <button id="depthButton">Depth (D)</button>
+            <button id="clipButton">Near/Far (N)</button>
+            <button id="fovPresetButton">FOV Preset</button>
+          </div>
+          <button class="wide-button" id="resetButton">Reset Scene (R)</button>
+          <div class="keyboard-help">
+            <b>Keyboard</b><span>Arrow: camera X/Y · W/S: camera Z</span
+            ><span>Q/E: target X · A/D: target Y</span
+            ><span>O: projection · B: orbit · X: split</span
+            ><span>D: depth · N: near/far · R: reset</span>
+          </div>
+        </aside>
+      </div>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

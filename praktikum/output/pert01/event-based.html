@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Graphics Playground â€” Event-Based</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, system-ui, sans-serif;
+        background: #07111f;
+        color: #dcecff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 20px;
+        background:
+          radial-gradient(circle at 80% 0, #123b58, transparent 42rem), #07111f;
+      }
+      .app {
+        max-width: 1180px;
+        margin: auto;
+      }
+      .head {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: end;
+        margin-bottom: 16px;
+      }
+      .eyebrow {
+        color: #4df3ff;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+      }
+      .head h1 {
+        margin: 7px 0 0;
+        font-size: clamp(24px, 4vw, 42px);
+      }
+      .head p {
+        color: #8ba8c4;
+        margin: 6px 0 0;
+      }
+      .badge {
+        padding: 9px 12px;
+        border: 1px solid #246884;
+        border-radius: 999px;
+        color: #4df3ff;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 245px;
+        gap: 14px;
+      }
+      .stage,
+      .panel {
+        border: 1px solid #21435a;
+        background: #0a1b2b;
+        border-radius: 18px;
+        padding: 14px;
+        box-shadow: 0 16px 40px #0003;
+      }
+      .canvas-wrap {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16/10;
+        background: #07111f;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .canvas-wrap canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .hud {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .stat {
+        padding: 10px;
+        border-radius: 10px;
+        background: #10283b;
+        color: #9fb8cf;
+        font:
+          12px ui-monospace,
+          monospace;
+      }
+      .stat b {
+        display: block;
+        color: #4df3ff;
+        margin-top: 3px;
+      }
+      .control {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 9px 0;
+        border-bottom: 1px solid #21435a;
+        font-size: 12px;
+      }
+      .control input[type="range"] {
+        width: 110px;
+        accent-color: #4df3ff;
+      }
+      .button-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+        margin-top: 12px;
+      }
+      button {
+        border: 1px solid #2c6880;
+        border-radius: 9px;
+        padding: 9px;
+        background: #102d42;
+        color: #dcecff;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: #4df3ff;
+        color: #4df3ff;
+      }
+      .primary {
+        background: #4df3ff;
+        color: #06202b;
+        border-color: #4df3ff;
+        font-weight: 800;
+      }
+      .hint {
+        color: #8ba8c4;
+        font-size: 11px;
+        line-height: 1.55;
+        margin: 14px 0 0;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+        color: #a5bbcf;
+        font-size: 11px;
+      }
+      .legend span:before {
+        content: "";
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--c);
+        margin-right: 5px;
+      }
+      @media (max-width: 760px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .head {
+          align-items: start;
+          flex-direction: column;
+        }
+        .panel {
+          order: -1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="head">
+        <div>
+          <span class="eyebrow">PRAKTIKUM 01 Â· EVENT-BASED INPUT</span>
+          <h1>Interactive Graphics Playground</h1>
+          <p>
+            Translasi player dipicu langsung oleh event <code>keydown</code>.
+          </p>
+        </div>
+        <span class="badge" id="mode">RUNNING</span>
+      </header>
+      <div class="layout">
+        <section class="stage">
+          <div class="canvas-wrap">
+            <canvas id="graphicsCanvas" width="960" height="600"></canvas>
+          </div>
+          <div class="hud">
+            <div class="stat">Mouse coordinate<b id="mouseText">(0, 0)</b></div>
+            <div class="stat">Keyboard state<b id="keysText">none</b></div>
+            <div class="stat">Player position<b id="playerText">(0, 0)</b></div>
+            <div class="stat">Event counter<b id="eventText">0 keydown</b></div>
+          </div>
+          <div class="legend">
+            <span style="--c: #3498db">rectangle</span
+            ><span style="--c: #e74c3c">line</span
+            ><span style="--c: #2ecc71">circle</span
+            ><span style="--c: #f39c12">triangle</span
+            ><span style="--c: #9b59b6">bouncing ball</span
+            ><span style="--c: #4df3ff">mouse circle</span>
+          </div>
+        </section>
+        <aside class="panel">
+          <span class="eyebrow">PARAMETER</span>
+          <div class="control">
+            <span>Player speed</span
+            ><input id="speed" type="range" min="1" max="15" value="5" /><b
+              id="speedText"
+              >5</b
+            >
+          </div>
+          <div class="control">
+            <span>Trail mode</span><input id="trail" type="checkbox" />
+          </div>
+          <div class="control">
+            <span>Animation</span><b id="pauseText">Playing</b>
+          </div>
+          <div class="button-row">
+            <button class="primary" id="pause">Pause (P)</button
+            ><button id="reset">Reset (R)</button>
+          </div>
+          <button style="width: 100%; margin-top: 7px" id="clear">
+            Clear circles
+          </button>
+          <p class="hint">
+            <b>Event-based:</b> setiap keydown langsung mengubah posisi player.
+            Tahan tombol dan amati delay serta keyboard repeat browser. Tekan
+            <b>C</b> untuk mengganti warna bola.
+          </p>
+          <p class="hint">
+            Klik canvas untuk mengganti warna bola sekaligus membuat circle baru
+            di posisi mouse.
+          </p>
+        </aside>
+      </div>
+    </main>
+    <script type="module" src="./event-based.js"></script>
+  </body>
+</html>

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three.js Interactive 3D Application - Praktikum 7</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="page-header">
+        <div>
+          <span class="eyebrow">PRAKTIKUM 07 · INTERACTIVE 3D</span>
+          <h1>Interactive Web 3D Prototype</h1>
+          <p>
+            Scene graph, PBR, GLB, animation, raycasting, selection, dan
+            environment.
+          </p>
+        </div>
+        <span id="statusBadge" class="status-badge">LOADING SCENE</span>
+      </header>
+      <div class="workspace">
+        <section class="canvas-panel">
+          <div id="sceneContainer" class="scene-container"></div>
+          <div class="hud-grid">
+            <div class="hud-card">
+              <span>Hover</span><b id="hoverInfo">-</b>
+            </div>
+            <div class="hud-card">
+              <span>Selected</span><b id="selectedInfo">-</b>
+            </div>
+            <div class="hud-card">
+              <span>Environment</span><b id="environmentInfo">ON</b>
+            </div>
+            <div class="hud-card">
+              <span>GLB</span><b id="modelInfo">Loading...</b>
+            </div>
+            <div class="hud-card">
+              <span>Objects</span><b id="objectInfo">0</b>
+            </div>
+            <div class="hud-card"><span>FPS</span><b id="fpsInfo">0</b></div>
+          </div>
+          <section id="infoPanel" class="info-panel">
+            <div>
+              <span class="eyebrow">SELECTION INFORMATION</span>
+              <h2 id="infoTitle">Belum ada objek dipilih</h2>
+            </div>
+            <div class="info-grid">
+              <span>Position</span><b id="infoPosition">-</b
+              ><span>Rotation</span><b id="infoRotation">-</b><span>Scale</span
+              ><b id="infoScale">-</b><span>Material</span
+              ><b id="infoMaterial">-</b>
+            </div>
+          </section>
+        </section>
+        <aside class="control-panel">
+          <span class="eyebrow">PARAMETER CONTROL</span>
+          <label class="select-row"
+            >Active camera<select id="cameraSelect">
+              <option value="perspective">Perspective</option>
+              <option value="orthographic">Orthographic</option>
+            </select></label
+          >
+          <label class="range-row"
+            ><span>Camera FOV</span><output id="fovValue">52°</output></label
+          ><input id="fovControl" type="range" min="25" max="100" value="52" />
+          <label class="range-row"
+            ><span>Roughness</span
+            ><output id="roughnessValue">0.35</output></label
+          ><input
+            id="roughnessControl"
+            type="range"
+            min="0.05"
+            max="1"
+            step="0.05"
+            value="0.35"
+          />
+          <label class="range-row"
+            ><span>Metalness</span
+            ><output id="metalnessValue">0.65</output></label
+          ><input
+            id="metalnessControl"
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value="0.65"
+          />
+          <label class="range-row"
+            ><span>Orbit speed</span
+            ><output id="orbitValue">0.45</output></label
+          ><input
+            id="orbitControl"
+            type="range"
+            min="0"
+            max="1.5"
+            step="0.05"
+            value="0.45"
+          />
+          <div class="button-grid">
+            <button id="environmentButton">Environment (E)</button
+            ><button id="resetButton">Reset (R)</button>
+            <button id="clip1Button">Clip 1</button
+            ><button id="clip2Button">Clip 2</button>
+            <button id="clip3Button">Clip 3</button
+            ><button id="solarButton">Solar (S)</button>
+          </div>
+          <div class="keyboard-help">
+            <b>Interaksi</b><span>Hover: emissive + scale 1.06</span
+            ><span>Click: pilih objek + panel informasi</span
+            ><span>1 / 2 / 3: ganti animation clip</span
+            ><span>E: environment · S: solar system</span
+            ><span>R: reset · drag tidak diperlukan</span>
+          </div>
+          <div id="logPanel" class="log-panel">
+            Raycaster siap. Arahkan pointer ke objek.
+          </div>
+        </aside>
+      </div>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

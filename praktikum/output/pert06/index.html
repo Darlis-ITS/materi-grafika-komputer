@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three.js Mini 3D Scene — Praktikum 6</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="page-header">
+        <div>
+          <span class="eyebrow">PRAKTIKUM 06 · THREE.JS</span>
+          <h1>Three.js Mini 3D Scene</h1>
+          <p>
+            Eksplorasi abstraction Three.js, material, lighting, shadow, camera,
+            dan scene graph.
+          </p>
+        </div>
+        <span class="status-badge" id="statusBadge">RUNNING · THREE.JS</span>
+      </header>
+      <div class="workspace">
+        <section class="canvas-panel">
+          <div id="sceneContainer" class="scene-container"></div>
+          <div class="hud-grid">
+            <div class="hud-card">
+              <span>Camera</span><b id="cameraInfo">Perspective</b>
+            </div>
+            <div class="hud-card">
+              <span>Objects</span><b id="objectInfo">0</b>
+            </div>
+            <div class="hud-card">
+              <span>Renderer</span><b id="rendererInfo">WebGL</b>
+            </div>
+            <div class="hud-card"><span>FPS</span><b id="fpsInfo">0</b></div>
+            <div class="hud-card">
+              <span>Light</span><b id="lightInfo">1.20</b>
+            </div>
+            <div class="hud-card">
+              <span>Animation</span><b id="animationInfo">Playing</b>
+            </div>
+          </div>
+        </section>
+        <aside class="control-panel">
+          <span class="eyebrow">PARAMETER CONTROL</span
+          ><label class="select-row"
+            >Camera mode<select id="cameraSelect">
+              <option value="perspective">Perspective</option>
+              <option value="orthographic">Orthographic</option>
+            </select></label
+          ><label class="range-row"
+            ><span>FOV</span><output id="fovValue">50°</output></label
+          ><input
+            id="fovControl"
+            type="range"
+            min="25"
+            max="100"
+            value="50"
+          /><label class="range-row"
+            ><span>Light intensity</span
+            ><output id="lightValue">1.20</output></label
+          ><input
+            id="lightControl"
+            type="range"
+            min="0"
+            max="3"
+            step="0.05"
+            value="1.2"
+          /><label class="select-row"
+            >Shadow quality<select id="shadowSelect">
+              <option value="1024">1024</option>
+              <option value="2048">2048</option>
+              <option value="512">512</option>
+            </select></label
+          ><label class="range-row"
+            ><span>Geometry segments</span
+            ><output id="segmentValue">24</output></label
+          ><input
+            id="segmentControl"
+            type="range"
+            min="8"
+            max="48"
+            value="24"
+          />
+          <div class="button-grid">
+            <button id="cameraButton">Camera (C)</button
+            ><button id="lightOrbitButton">Light orbit (L)</button
+            ><button id="galleryButton">Gallery (H)</button
+            ><button id="animationButton">Pause (G)</button>
+          </div>
+          <button class="wide-button" id="resetButton">Reset Scene (R)</button>
+          <div class="keyboard-help">
+            <b>Keyboard</b><span>Arrow / WASD: move cube utama</span
+            ><span>Q/E: rotate cube utama</span
+            ><span>C: camera · L: light orbit · H: gallery</span
+            ><span>G: pause · R: reset</span>
+          </div>
+        </aside>
+      </div>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
