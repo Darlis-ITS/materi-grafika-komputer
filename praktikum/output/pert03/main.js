@@ -173,7 +173,7 @@ function draw() {
   if (orbitOn)
     obj(M(T(0.46, 0), M(R(seconds * 70), T(0.18, 0))), [0.5, 0.95, 0.5, 1]);
   matrixText.textContent =
-    "Matrix 3Ãƒâ€”3 | [" +
+    "Matrix 3×3 | [" +
     [ma[0], ma[3], ma[6]].map((v) => v.toFixed(2)).join(" ") +
     "] [" +
     [ma[1], ma[4], ma[7]].map((v) => v.toFixed(2)).join(" ") +
@@ -181,10 +181,10 @@ function draw() {
     [ma[2], ma[5], ma[8]].map((v) => v.toFixed(2)).join(" ") +
     "]";
   positionInfo.textContent = "(" + A.x.toFixed(2) + ", " + A.y.toFixed(2) + ")";
-  rotationInfo.textContent = A.rotation.toFixed(1) + "Ã‚Â°";
+  rotationInfo.textContent = A.rotation.toFixed(1) + "°";
   scaleInfo.textContent =
     "(" + A.scaleX.toFixed(2) + ", " + A.scaleY.toFixed(2) + ")";
-  orderInfo.textContent = orderTRS ? "T Ãƒâ€” R Ãƒâ€” S" : "T Ãƒâ€” R";
+  orderInfo.textContent = orderTRS ? "T × R × S" : "T × R";
 }
 function frame(t) {
   const dt = Math.min((t - last) * 0.001, 0.05);
@@ -210,7 +210,7 @@ window.addEventListener("keydown", (e) => {
   if (k === "r") reset();
   if (k === "p") {
     paused = !paused;
-    status.textContent = paused ? "PAUSED Ã‚Â· WebGL2" : "RUNNING Ã‚Â· WebGL2";
+    status.textContent = paused ? "PAUSED · WebGL2" : "RUNNING · WebGL2";
     pause.textContent = paused ? "Resume (P)" : "Pause (P)";
   }
   if (k === "t") orderTRS = !orderTRS;
@@ -226,7 +226,7 @@ canvas.addEventListener("click", (e) => {
 });
 pause.onclick = () => {
   paused = !paused;
-  status.textContent = paused ? "PAUSED Ã‚Â· WebGL2" : "RUNNING Ã‚Â· WebGL2";
+    status.textContent = paused ? "PAUSED · WebGL2" : "RUNNING · WebGL2";
   pause.textContent = paused ? "Resume (P)" : "Pause (P)";
 };
 reset.onclick = reset;
@@ -234,7 +234,7 @@ order.onclick = () => (orderTRS = !orderTRS);
 orbit.onclick = () => (orbitOn = !orbitOn);
 moveSpeed.oninput = () => (moveValue.textContent = moveSpeed.value);
 rotationSpeed.oninput = () =>
-  (rotationValue.textContent = rotationSpeed.value + "Ã‚Â°/s");
+  (rotationValue.textContent = rotationSpeed.value + "°/s");
 scaleSpeed.oninput = () =>
   (scaleValue.textContent = Number(scaleSpeed.value).toFixed(2));
 requestAnimationFrame(frame);
