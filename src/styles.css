@@ -1375,12 +1375,12 @@ h1 em {
 :root[data-theme="dark"] .background-image-enabled::before {
   background-image:
     linear-gradient(rgba(2, 8, 18, 0.3), rgba(2, 8, 18, 0.52)),
-    url("./assets/backgrounds/dark-bg.png");
+    url("./assets/backgrounds/dark-bg.svg");
 }
 :root[data-theme="light"] .background-image-enabled::before {
   background-image:
     linear-gradient(rgba(244, 248, 252, 0.18), rgba(244, 248, 252, 0.34)),
-    url("./assets/backgrounds/light-bg.png");
+    url("./assets/backgrounds/light-bg.svg");
 }
 .app-shell {
   position: relative;
