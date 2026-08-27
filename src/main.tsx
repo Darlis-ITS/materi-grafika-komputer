@@ -57,11 +57,17 @@ const practicals = import.meta.glob("../praktikum/*.md", {
   import: "default",
   eager: true,
 }) as Record<string, string>;
-const outputFiles = import.meta.glob("../praktikum/output/**/*", {
+const outputSourceFiles = import.meta.glob("../praktikum/output/**/*", {
   query: "?url",
   import: "default",
   eager: true,
 }) as Record<string, string>;
+const outputFiles = Object.fromEntries(
+  Object.keys(outputSourceFiles).map((path) => [
+    path,
+    `./praktikum/output/${path.replace(/^\.\.\/praktikum\/output\//, "")}`,
+  ]),
+) as Record<string, string>;
 const outputDocs = import.meta.glob("../praktikum/output/**/*.md", {
   query: "?raw",
   import: "default",
