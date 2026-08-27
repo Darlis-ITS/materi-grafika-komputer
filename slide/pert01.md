@@ -1019,6 +1019,9 @@ FRAGMENT / PIXEL
  ↓
 IMAGE
 ```
+
+---
+
 # Slide 40 — Penutup
 
 # TERIMA KASIH
