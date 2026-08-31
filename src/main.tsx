@@ -48,6 +48,11 @@ const narratives = import.meta.glob("../slide/narasi/*.md", {
   import: "default",
   eager: true,
 }) as Record<string, string>;
+const topicUtsDocuments = import.meta.glob("../slide/topik-uts/*.md", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+}) as Record<string, string>;
 const images = import.meta.glob(
   "../slide/slide-image/**/*.{webp,png,jpg,jpeg,gif}",
   { query: "?url", import: "default", eager: true },
@@ -192,6 +197,24 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#039;");
 }
 
+function normalizePath(value: string) {
+  return decodeURIComponent(value).replace(/\\/g, "/").replace(/^\.?\//, "");
+}
+
+function topicDocumentForHref(href: string) {
+  const normalized = normalizePath(href).replace(/^#/, "");
+  const filename = normalized.split("/").pop();
+  if (!filename || !normalized.startsWith("topik-uts/")) return null;
+  const path = Object.keys(topicUtsDocuments).find((item) =>
+    item.endsWith(`/topik-uts/${filename}`),
+  );
+  if (!path) return null;
+  return {
+    href: `topik-uts/${filename}`,
+    source: topicUtsDocuments[path],
+  };
+}
+
 function inlineCodeKind(value: string) {
   const text = value.trim();
   if (/^(\/\/|#|\/\*)/.test(text)) return "comment";
@@ -247,6 +270,14 @@ function renderMarkdown(source: string) {
         ? text
         : hljs.highlight(text, { language }).value;
     return `<pre><code class="hljs language-${language}">${highlighted}</code></pre>`;
+  };
+  renderer.link = ({ href, title, text }) => {
+    const safeHref = escapeHtml(href || "");
+    const safeTitle = title ? ` title="${escapeHtml(title)}"` : "";
+    if (topicDocumentForHref(href || "")) {
+      return `<a href="#${safeHref}"${safeTitle} class="topic-detail-link" data-topic-uts="${safeHref}">${text}</a>`;
+    }
+    return `<a href="${safeHref}"${safeTitle} target="_blank" rel="noreferrer">${text}</a>`;
   };
   return { html: marked.parse(source, { renderer }) as string, headings };
 }
@@ -310,6 +341,7 @@ function ModeToggle({
 function App() {
   const [mode, setMode] = useState<Mode>("home");
   const [selected, setSelected] = useState<Content>(contents[0]);
+  const [topicHref, setTopicHref] = useState<string | null>(null);
   const [slideMode, setSlideMode] = useState<"single" | "all">("single");
   const [slideTab, setSlideTab] = useState<SlideTab>("markup");
   const [slideIndex, setSlideIndex] = useState(0);
@@ -330,6 +362,25 @@ function App() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [selected, mode, tab]);
+  useEffect(() => {
+    const handleTopicLink = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const link = target.closest<HTMLAnchorElement>("a[data-topic-uts]");
+      if (!link) return;
+      event.preventDefault();
+      setTopicHref(link.dataset.topicUts || null);
+    };
+    document.addEventListener("click", handleTopicLink);
+    return () => document.removeEventListener("click", handleTopicLink);
+  }, []);
+  useEffect(() => {
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setTopicHref(null);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
 
   const openContent = (content: Content, nextMode: Mode = "slide") => {
     setSelected(content);
@@ -454,6 +505,12 @@ function App() {
           )}
         </main>
       </div>
+      {topicHref && (
+        <TopicDetailDialog
+          detail={topicDocumentForHref(topicHref)}
+          onClose={() => setTopicHref(null)}
+        />
+      )}
     </div>
   );
 }
@@ -965,6 +1022,43 @@ function ImageSlideView({
     </section>
   );
 }
+
+function TopicDetailDialog({
+  detail,
+  onClose,
+}: {
+  detail: ReturnType<typeof topicDocumentForHref>;
+  onClose: () => void;
+}) {
+  const document = detail ? renderMarkdown(detail.source) : null;
+  return (
+    <div className="topic-dialog-backdrop" role="presentation" onClick={onClose}>
+      <section
+        className="topic-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Detail topik tugas UTS"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="topic-dialog-toolbar">
+          <span>{detail?.href || "Detail topik"}</span>
+          <button className="icon-button" onClick={onClose} aria-label="Tutup">
+            {icon("close")}
+          </button>
+        </div>
+        {document ? (
+          <article
+            className="markdown-content topic-document"
+            dangerouslySetInnerHTML={{ __html: document.html }}
+          />
+        ) : (
+          <EmptyState text="Detail topik tidak ditemukan." />
+        )}
+      </section>
+    </div>
+  );
+}
+
 function PracticalView({
   practical,
   output,

@@ -539,6 +539,11 @@ h1 em {
 .markdown-content a {
   color: var(--accent-2);
 }
+.markdown-content .topic-detail-link {
+  font-weight: 700;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
 .markdown-content strong {
   color: var(--accent);
 }
@@ -608,6 +613,46 @@ h1 em {
   border: 0;
   border-top: 1px solid var(--line);
   margin: 35px 0;
+}
+.topic-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 34px 20px;
+  background: rgba(5, 10, 18, 0.72);
+  backdrop-filter: blur(10px);
+  overflow: auto;
+}
+.topic-dialog {
+  width: min(1040px, 100%);
+  max-height: calc(100vh - 68px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+}
+.topic-dialog-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  backdrop-filter: blur(12px);
+  color: var(--muted);
+  font: 700 12px "Space Grotesk";
+}
+.topic-document {
+  max-width: none;
+  padding: 28px;
 }
 .narrative-box {
   border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--line));

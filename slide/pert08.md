@@ -646,6 +646,8 @@ public/
 
 Ruangan futuristik dengan panel, hologram, mesin, lampu, dan object interaktif.
 
+**Detail tugas:** [Buka spesifikasi lengkap Topik 1](topik-uts/UTS_Threejs_Spesifikasi_01_SciFi_Control_Room.md)
+
 **Jenis project:**
 ```text
 Interactive 3D Application / Experience
@@ -669,6 +671,8 @@ HDR / Environment Map
 # Slide 35 — Topik 2 — Elemental Army Run
 
 Pasukan Fire, Water, dan Electric melewati gate dan bertempur.
+
+**Detail tugas:** [Buka spesifikasi lengkap Topik 2](topik-uts/UTS_Threejs_Spesifikasi_02_Elemental_Army_Run.md)
 
 **Jenis project:**
 ```text
@@ -694,6 +698,8 @@ Crowd Visualization
 
 Museum virtual dengan artifact yang dapat di-hover, dipilih, di-inspect, dan ditampilkan informasinya.
 
+**Detail tugas:** [Buka spesifikasi lengkap Topik 3](topik-uts/UTS_Threejs_Spesifikasi_03_Interactive_Museum.md)
+
 **Jenis project:**
 ```text
 Interactive 3D Application / Experience
@@ -718,6 +724,8 @@ Material Presentation
 
 Swarm robot melewati multiplier gate, obstacle, upgrade, dan final battle.
 
+**Detail tugas:** [Buka spesifikasi lengkap Topik 4](topik-uts/UTS_Threejs_Spesifikasi_04_Robot_Swarm_Factory.md)
+
 **Jenis project:**
 ```text
 Mini Game 3D
@@ -740,6 +748,8 @@ Animated Machinery
 # Slide 38 — Topik 5 — Escape Room 3D
 
 Player mencari clue dan menyelesaikan puzzle untuk keluar.
+
+**Detail tugas:** [Buka spesifikasi lengkap Topik 5](topik-uts/UTS_Threejs_Spesifikasi_05_Escape_Room_3D.md)
 
 **Jenis project:**
 ```text
@@ -765,6 +775,8 @@ GLB
 
 Armada spaceship melewati gate, asteroid, turret, lalu melawan mothership.
 
+**Detail tugas:** [Buka spesifikasi lengkap Topik 6](topik-uts/UTS_Threejs_Spesifikasi_06_Space_Fleet_Multiplier.md)
+
 **Jenis project:**
 ```text
 Mini Game 3D
@@ -787,6 +799,8 @@ Animated Effects
 # Slide 40 — Topik 7 — Product Configurator 3D
 
 Pengguna memilih bagian produk dan mengganti warna, material, atau komponen.
+
+**Detail tugas:** [Buka spesifikasi lengkap Topik 7](topik-uts/UTS_Threejs_Spesifikasi_07_Product_Configurator_3D.md)
 
 **Jenis project:**
 ```text
@@ -812,6 +826,8 @@ Camera Control
 
 Ninja menghasilkan clone melalui gate lalu menghadapi enemy dan boss.
 
+**Detail tugas:** [Buka spesifikasi lengkap Topik 8](topik-uts/UTS_Threejs_Spesifikasi_08_Ninja_Clone_Rush.md)
+
 **Jenis project:**
 ```text
 Mini Game 3D
@@ -835,6 +851,8 @@ Trail Effect
 # Slide 42 — Topik 9 — Interactive Haunted House
 
 Rumah gelap dengan pintu, object, lighting, dan horror event interaktif.
+
+**Detail tugas:** [Buka spesifikasi lengkap Topik 9](topik-uts/UTS_Threejs_Spesifikasi_09_Interactive_Haunted_House.md)
 
 **Jenis project:**
 ```text
@@ -863,6 +881,8 @@ Horror VFX
 # Slide 43 — Topik 10 — Meteor Defense
 
 Player mempertahankan planet atau station dari meteor.
+
+**Detail tugas:** [Buka spesifikasi lengkap Topik 10](topik-uts/UTS_Threejs_Spesifikasi_10_Meteor_Defense.md)
 
 **Jenis project:**
 ```text
