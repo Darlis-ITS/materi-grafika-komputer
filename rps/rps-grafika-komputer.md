@@ -72,11 +72,11 @@ Setelah menyelesaikan mata kuliah ini, mahasiswa mampu:
 
 | Komponen                         | Bobot indikatif | Bukti penilaian                                    |
 | -------------------------------- | --------------: | -------------------------------------------------- |
-| Kehadiran, diskusi, dan latihan  |             10% | Partisipasi dan jawaban refleksi                   |
-| Praktikum 1–7                    |             30% | Source code, hasil eksperimen, dan dokumentasi     |
+| Kehadiran, diskusi, dan latihan  |             5% | Partisipasi dan jawaban refleksi                   |
+| Praktikum 1–7                    |             20% | Source code, hasil eksperimen, dan dokumentasi     |
 | UTS / Interactive Web 3D Project |             25% | Prototype, presentasi, dan penjelasan teknis       |
-| Praktikum 9–15                   |             15% | Asset, scene, material, shader, VFX, dan profiling |
-| UAS / Final Project              |             20% | Produk integratif, repository, laporan, dan demo   |
+| Praktikum 9–15                   |             25% | Asset, scene, material, shader, VFX, dan profiling |
+| UAS / Final Project              |             25% | Produk integratif, repository, laporan, dan demo   |
 
 Bobot dapat disesuaikan dengan kebijakan akademik dan kontrak kuliah. Rubrik utama menilai ketepatan konsep, kualitas implementasi, interaksi, visual, performa, dokumentasi, dan kemampuan menjelaskan keputusan teknis.
 
@@ -98,10 +98,12 @@ Bobot dapat disesuaikan dengan kebijakan akademik dan kontrak kuliah. Rubrik uta
 - Unity dengan Universal Render Pipeline untuk real-time rendering.
 - Modul praktikum, slide materi, dokumentasi resmi teknologi, dan sample asset berlisensi sesuai ketentuan.
 
-## Aturan Pengumpulan
+## Aturan Pengumpulan Tugas Praktikum
 
+- Pengumpulan di classroom berupa link video demo, nilai praktikum berdasarkan waktu pengumpulan. Pengumpulan pada hari H bernilai 86, hari sebelumnya = 86 + n hari sebelum hari H, dikumpulkan setelah hari H = 86 - n hari setelah hari H.
+- tulis juga pada sheet peserta link video dan link app yang sudah di build dan deploy, misal: https://username.github.io/praktikum-grafkom/ 
 - Setiap output menyertakan source code yang tidak diminifikasi.
-- Asset eksternal disimpan pada folder project atau dicantumkan sumber dan lisensinya.
+- Asset eksternal (jika ada) disimpan pada folder project atau dicantumkan sumber dan lisensinya.
 - README menjelaskan cara menjalankan, kontrol, hasil yang diharapkan, serta kendala yang diketahui.
 - Perubahan signifikan pada source code dijelaskan dalam laporan singkat.
 
