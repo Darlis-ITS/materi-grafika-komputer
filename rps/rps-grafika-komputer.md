@@ -100,7 +100,8 @@ Bobot dapat disesuaikan dengan kebijakan akademik dan kontrak kuliah. Rubrik uta
 
 ## Aturan Pengumpulan Tugas Praktikum
 
-- Pengumpulan di classroom berupa link video demo, nilai praktikum berdasarkan waktu pengumpulan. Pengumpulan pada hari H bernilai 86, hari sebelumnya = 86 + n hari sebelum hari H, dikumpulkan setelah hari H = 86 - n hari setelah hari H.
+- Pengumpulan di classroom berupa link video demo dan link app yang bisa dilihat
+- nilai praktikum berdasarkan waktu pengumpulan. Pengumpulan pada hari H bernilai 86, hari sebelumnya = 86 + n hari sebelum hari H, dikumpulkan setelah hari H = 86 - n hari setelah hari H.
 - tulis juga pada sheet peserta link video dan link app yang sudah di build dan deploy, misal: https://username.github.io/praktikum-grafkom/ 
 - Setiap output menyertakan source code yang tidak diminifikasi.
 - Asset eksternal (jika ada) disimpan pada folder project atau dicantumkan sumber dan lisensinya.
