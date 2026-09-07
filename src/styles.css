@@ -744,6 +744,11 @@ h1 em {
   gap: 12px;
   margin-top: 30px;
 }
+.output-section + .output-section {
+  margin-top: 42px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
 .output-card {
   min-height: 110px;
   padding: 18px;

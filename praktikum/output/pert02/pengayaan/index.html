@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebGL2 Fundamental & GLSL Basics (best practice)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="panel intro-panel">
+      <p class="eyebrow">Praktikum 02 Tambahan</p>
+      <h1>WebGL2 Fundamental & GLSL Basics <span>(best practice)</span></h1>
+      <p class="description">
+        Contoh ini memperlihatkan shader source via tag &lt;script&gt;, attribute, uniform,
+        varying, multiple draw calls, primitive assembly, animasi sederhana, dan interaksi
+        tanpa MVP matrix.
+      </p>
+    </section>
+
+    <section class="stage-card">
+      <canvas id="glCanvas" width="960" height="540" aria-label="WebGL2 canvas"></canvas>
+      <div id="webglError" class="webgl-error" hidden>
+        Browser tidak mendukung WebGL2. Coba gunakan Chrome, Edge, Firefox, atau Safari versi terbaru.
+      </div>
+    </section>
+
+    <section class="panel controls-panel">
+      <div class="control-grid">
+        <label>
+          Brightness global
+          <input id="brightnessSlider" type="range" min="0.2" max="1.8" value="1.0" step="0.05" />
+          <span id="brightnessValue">1.00</span>
+        </label>
+
+        <label>
+          Point size
+          <input id="pointSizeSlider" type="range" min="4" max="48" value="18" step="1" />
+          <span id="pointSizeValue">18</span>
+        </label>
+
+        <label>
+          Speed
+          <input id="speedSlider" type="range" min="0" max="2.5" value="1.0" step="0.1" />
+          <span id="speedValue">1.0</span>
+        </label>
+
+        <label>
+          Primitive fokus
+          <select id="primitiveSelect">
+            <option value="all">Semua primitive</option>
+            <option value="triangles">TRIANGLES</option>
+            <option value="points">POINTS</option>
+            <option value="lines">LINES</option>
+            <option value="stripLoop">LINE_STRIP & LINE_LOOP</option>
+            <option value="triangleStripFan">TRIANGLE_STRIP & TRIANGLE_FAN</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="button-row">
+        <button id="pauseButton" type="button">Pause</button>
+        <button id="resetButton" type="button">Reset posisi</button>
+      </div>
+
+      <div class="hint-box">
+        <strong>Interaksi:</strong>
+        gunakan tombol panah atau WASD untuk menggerakkan semua objek.
+        Tekan <kbd>R</kbd> untuk reset dan <kbd>Space</kbd> untuk pause/resume.
+      </div>
+    </section>
+
+    <section class="panel info-panel">
+      <h2>Status</h2>
+      <dl>
+        <div>
+          <dt>Mouse NDC</dt>
+          <dd id="mouseNdc">(0.00, 0.00)</dd>
+        </div>
+        <div>
+          <dt>Offset</dt>
+          <dd id="offsetStatus">(0.00, 0.00)</dd>
+        </div>
+        <div>
+          <dt>Draw mode</dt>
+          <dd id="drawModeStatus">Semua primitive</dd>
+        </div>
+      </dl>
+    </section>
+  </main>
+
+  <!-- Vertex Shader: shader source disimpan dalam tag script, bukan const string JavaScript. -->
+  <script id="vertex-shader" type="x-shader/x-vertex">
+#version 300 es
+
+in vec2 a_position;
+in vec3 a_color;
+
+uniform float u_time;
+uniform vec2 u_offset;
+uniform float u_pointSize;
+uniform float u_waveAmount;
+
+out vec3 v_color;
+
+void main() {
+  float wave = sin(u_time + a_position.x * 8.0) * u_waveAmount;
+  vec2 animatedPosition = a_position + u_offset + vec2(0.0, wave);
+
+  gl_Position = vec4(animatedPosition, 0.0, 1.0);
+  gl_PointSize = u_pointSize;
+
+  v_color = a_color;
+}
+  </script>
+
+  <!-- Fragment Shader -->
+  <script id="fragment-shader" type="x-shader/x-fragment">
+#version 300 es
+
+precision mediump float;
+
+in vec3 v_color;
+
+uniform float u_brightness;
+
+out vec4 outColor;
+
+void main() {
+  vec3 finalColor = clamp(v_color * u_brightness, 0.0, 1.0);
+  outColor = vec4(finalColor, 1.0);
+}
+  </script>
+
+  <script src="main.js"></script>
+</body>
+</html>

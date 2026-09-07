@@ -22,8 +22,8 @@ hljs.registerLanguage("json", json);
 hljs.registerLanguage("glsl", glsl);
 
 type Mode = "home" | "slide" | "practical";
-type Tab = "description" | "output" | "checklist";
-type SlideTab = "markup" | "image" | "narrative";
+type Tab = "description" | "enrichment" | "output" | "checklist";
+type SlideTab = "markup" | "image" | "narrative" | "bestPractice";
 type Content = {
   id: string;
   type: "rps" | "intro" | "meeting";
@@ -32,7 +32,9 @@ type Content = {
   subtitle: string;
   slide?: string;
   narrative?: string;
+  bestPractice?: string;
   practical?: string;
+  practicalEnrichment?: string;
   output?: string;
   rps?: string;
 };
@@ -44,6 +46,11 @@ const slides = import.meta.glob("../slide/*.md", {
   eager: true,
 }) as Record<string, string>;
 const narratives = import.meta.glob("../slide/narasi/*.md", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+}) as Record<string, string>;
+const bestPractices = import.meta.glob("../slide/best-practice/*.md", {
   query: "?raw",
   import: "default",
   eager: true,
@@ -100,6 +107,26 @@ const practicalByMeeting = Object.entries(practicals).reduce<
   Record<string, string>
 >((acc, [path, value]) => {
   const match = path.match(/pertemuan-(\d+)/i);
+  if (match && !/pengayaan|tambahan/i.test(path)) {
+    acc[match[1].padStart(2, "0")] = value;
+  }
+  return acc;
+}, {});
+
+const practicalEnrichmentByMeeting = Object.entries(practicals).reduce<
+  Record<string, string>
+>((acc, [path, value]) => {
+  const match = path.match(/pertemuan-(\d+)-pengayaan/i);
+  if (match) {
+    acc[match[1].padStart(2, "0")] = value;
+  }
+  return acc;
+}, {});
+
+const bestPracticeByMeeting = Object.entries(bestPractices).reduce<
+  Record<string, string>
+>((acc, [path, value]) => {
+  const match = path.match(/pert(\d+)_best_practice/i);
   if (match) acc[match[1].padStart(2, "0")] = value;
   return acc;
 }, {});
@@ -170,7 +197,9 @@ const contents: Content[] = [
       subtitle: subtitleMap[key],
       slide: slidePath ? slides[slidePath] : undefined,
       narrative: narrativePath ? narratives[narrativePath] : undefined,
+      bestPractice: bestPracticeByMeeting[key],
       practical: practicalByMeeting[key],
+      practicalEnrichment: practicalEnrichmentByMeeting[key],
       output: key,
     };
   }),
@@ -195,6 +224,14 @@ function escapeHtml(value: string) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function plainHeadingText(value: string) {
+  return value
+    .replace(/`([^`]*)`/g, "$1")
+    .replace(/\\([\\`*{}\[\]()#+\-.!<>_])/g, "$1")
+    .replace(/<[^>]*>/g, "")
+    .trim();
 }
 
 function normalizePath(value: string) {
@@ -253,14 +290,16 @@ function inferCodeLanguage(source: string) {
 function renderMarkdown(source: string) {
   const headings: Heading[] = [];
   const renderer = new marked.Renderer();
-  renderer.heading = ({ text, depth }) => {
-    const id = slugify(text);
-    headings.push({ id, text: text.replace(/<[^>]*>/g, ""), level: depth });
-    return `<h${depth} id="${id}">${text}</h${depth}>`;
-  };
   renderer.codespan = ({ text }) => {
     const kind = inlineCodeKind(text);
     return `<code class="inline-code inline-code-${kind}">${escapeHtml(text)}</code>`;
+  };
+  renderer.heading = ({ text, depth }) => {
+    const plainText = plainHeadingText(text);
+    const id = slugify(plainText);
+    const inlineHtml = marked.parseInline(text, { renderer }) as string;
+    headings.push({ id, text: plainText, level: depth });
+    return `<h${depth} id="${id}">${inlineHtml}</h${depth}>`;
   };
   renderer.code = ({ text, lang }) => {
     const language =
@@ -280,6 +319,20 @@ function renderMarkdown(source: string) {
     return `<a href="${safeHref}"${safeTitle} target="_blank" rel="noreferrer">${text}</a>`;
   };
   return { html: marked.parse(source, { renderer }) as string, headings };
+}
+
+function slideTabIcon(tab: SlideTab) {
+  if (tab === "markup") return "code";
+  if (tab === "image") return "image";
+  if (tab === "narrative") return "record_voice_over";
+  return "rule";
+}
+
+function slideTabLabel(tab: SlideTab) {
+  if (tab === "markup") return "Slide (Markup)";
+  if (tab === "image") return "Image Slide";
+  if (tab === "narrative") return "Narasi Slide";
+  return "Best Practice";
 }
 
 function slideTitle(section: string, index: number) {
@@ -630,6 +683,12 @@ function ContentPage({
   const practical = content.practical
     ? renderMarkdown(content.practical)
     : null;
+  const practicalEnrichment = content.practicalEnrichment
+    ? renderMarkdown(content.practicalEnrichment)
+    : null;
+  const bestPractice = content.bestPractice
+    ? renderMarkdown(content.bestPractice)
+    : null;
   const narrative = content.narrative
     ? renderMarkdown(content.narrative)
     : null;
@@ -648,11 +707,22 @@ function ContentPage({
   );
   const isPractical = mode === "practical";
   const narrativePart = narrativeSlide.html;
+  const slideTabs: SlideTab[] = [
+    "markup",
+    "image",
+    "narrative",
+    ...(content.bestPractice ? (["bestPractice"] as SlideTab[]) : []),
+  ];
   const slideArticle = content.slide ? (
     <div dangerouslySetInnerHTML={{ __html: current.html }} />
   ) : (
     <EmptyState text="Materi slide Pertemuan 16 belum ditambahkan." />
   );
+  useEffect(() => {
+    if (slideTab === "bestPractice" && !content.bestPractice) {
+      setSlideTab("markup");
+    }
+  }, [content.bestPractice, setSlideTab, slideTab]);
   if (content.type === "rps") {
     const rpsDocument = renderMarkdown(content.rps || "");
     return (
@@ -712,39 +782,31 @@ function ContentPage({
       </div>
       {!isPractical ? (
         <div className="reader-layout">
-          <SlideOutline
-            sections={slideSections}
-            activeIndex={slideIndex}
-            onSelect={(index) => {
-              setSlideIndex(index);
-              if (slideMode === "all") setSlideMode("single");
-            }}
-          />
+          {slideTab === "bestPractice" && bestPractice ? (
+            <Outline headings={bestPractice.headings} />
+          ) : (
+            <SlideOutline
+              sections={slideSections}
+              activeIndex={slideIndex}
+              onSelect={(index) => {
+                setSlideIndex(index);
+                if (slideMode === "all") setSlideMode("single");
+              }}
+            />
+          )}
           <div className="reader-column">
             <section className="reader">
               <div className="slide-tabs">
-                {(["markup", "image", "narrative"] as SlideTab[]).map(
-                  (item) => (
-                    <button
-                      className={slideTab === item ? "active" : ""}
-                      onClick={() => setSlideTab(item)}
-                      key={item}
-                    >
-                      {icon(
-                        item === "markup"
-                          ? "code"
-                          : item === "image"
-                            ? "image"
-                            : "record_voice_over",
-                      )}
-                      {item === "markup"
-                        ? "Slide (Markup)"
-                        : item === "image"
-                          ? "Image Slide"
-                          : "Narasi Slide"}
-                    </button>
-                  ),
-                )}
+                {slideTabs.map((item) => (
+                  <button
+                    className={slideTab === item ? "active" : ""}
+                    onClick={() => setSlideTab(item)}
+                    key={item}
+                  >
+                    {icon(slideTabIcon(item))}
+                    {slideTabLabel(item)}
+                  </button>
+                ))}
               </div>
               {slideTab === "markup" && (
                 <>
@@ -861,12 +923,24 @@ function ContentPage({
                   )}
                 </>
               )}
+              {slideTab === "bestPractice" && (
+                <article className="markdown-content best-practice-page">
+                  {bestPractice ? (
+                    <div
+                      dangerouslySetInnerHTML={{ __html: bestPractice.html }}
+                    />
+                  ) : (
+                    <EmptyState text="Best practice belum tersedia." />
+                  )}
+                </article>
+              )}
             </section>
           </div>
         </div>
       ) : (
         <PracticalView
           practical={practical}
+          practicalEnrichment={practicalEnrichment}
           output={output}
           docs={docs}
           tab={tab}
@@ -1061,18 +1135,35 @@ function TopicDetailDialog({
 
 function PracticalView({
   practical,
+  practicalEnrichment,
   output,
   docs,
   tab,
   setTab,
 }: {
   practical: ReturnType<typeof renderMarkdown> | null;
+  practicalEnrichment: ReturnType<typeof renderMarkdown> | null;
   output: [string, string][];
   docs: [string, string][];
   tab: Tab;
   setTab: (tab: Tab) => void;
 }) {
   const [checks, setChecks] = useState<Record<number, boolean>>({});
+  const activeDocument =
+    tab === "enrichment" && practicalEnrichment
+      ? practicalEnrichment
+      : practical;
+  const practicalTabs: Tab[] = [
+    "description",
+    ...(practicalEnrichment ? (["enrichment"] as Tab[]) : []),
+    "output",
+    "checklist",
+  ];
+  useEffect(() => {
+    if (tab === "enrichment" && !practicalEnrichment) {
+      setTab("description");
+    }
+  }, [practicalEnrichment, setTab, tab]);
   const rawTasks = practical?.html
     .match(/<li>(.*?)<\/li>/g)
     ?.slice(-8)
@@ -1085,11 +1176,11 @@ function PracticalView({
   ];
   return (
     <div className="practical-layout">
-      <Outline headings={practical?.headings || []} />
+      <Outline headings={activeDocument?.headings || []} />
       <div className="practical-column">
         <section className="practical-main">
           <div className="tabs">
-            {(["description", "output", "checklist"] as Tab[]).map((item) => (
+            {practicalTabs.map((item) => (
               <button
                 className={tab === item ? "active" : ""}
                 onClick={() => setTab(item)}
@@ -1098,12 +1189,16 @@ function PracticalView({
                 {icon(
                   item === "description"
                     ? "description"
+                    : item === "enrichment"
+                      ? "rule"
                     : item === "output"
                       ? "preview"
                       : "checklist",
                 )}
                 {item === "description"
-                  ? "Deskripsi"
+                  ? "Panduan Utama"
+                  : item === "enrichment"
+                    ? "Pengayaan"
                   : item === "output"
                     ? `Output${output.length ? ` (${output.length})` : ""}`
                     : "Checklist Tugas"}
@@ -1116,6 +1211,16 @@ function PracticalView({
               dangerouslySetInnerHTML={{
                 __html:
                   practical?.html || "<p>Modul praktikum belum tersedia.</p>",
+              }}
+            />
+          )}
+          {tab === "enrichment" && (
+            <article
+              className="markdown-content"
+              dangerouslySetInnerHTML={{
+                __html:
+                  practicalEnrichment?.html ||
+                  "<p>Modul pengayaan belum tersedia.</p>",
               }}
             />
           )}
@@ -1158,24 +1263,12 @@ function OutputPanel({
   output: [string, string][];
   docs: [string, string][];
 }) {
-  const htmlOutputs = output.filter(([path]) =>
-    path.toLowerCase().endsWith(".html"),
-  );
-  const indexOutput = htmlOutputs.find(
-    ([path]) => path.split(/[\\/]/).pop()?.toLowerCase() === "index.html",
-  );
-  const otherHtmlOutputs = htmlOutputs.filter(
-    ([path]) => path !== indexOutput?.[0],
-  );
-  const documentation = docs.map(([path, source]) => ({
-    name: path.split(/[\\/]/).pop() || "Dokumentasi",
-    ...renderMarkdown(source),
-  }));
-  const sourceOutputs = output.filter(
-    ([path]) =>
-      !path.toLowerCase().endsWith(".html") &&
-      !path.toLowerCase().endsWith("readme.md"),
-  );
+  const isEnrichmentPath = (path: string) =>
+    /[\\/]pengayaan[\\/]/i.test(path);
+  const mainOutput = output.filter(([path]) => !isEnrichmentPath(path));
+  const enrichmentOutput = output.filter(([path]) => isEnrichmentPath(path));
+  const mainDocs = docs.filter(([path]) => !isEnrichmentPath(path));
+  const enrichmentDocs = docs.filter(([path]) => isEnrichmentPath(path));
   const demo = (entry: [string, string]) => (
     <section className="demo-card" key={entry[0]}>
       <div className="demo-card-head">
@@ -1192,51 +1285,89 @@ function OutputPanel({
       />
     </section>
   );
+  const renderOutputGroup = (
+    title: string,
+    description: string,
+    entries: [string, string][],
+    documentEntries: [string, string][],
+  ) => {
+    if (!entries.length && !documentEntries.length) return null;
+    const htmlOutputs = entries.filter(([path]) =>
+      path.toLowerCase().endsWith(".html"),
+    );
+    const indexOutput = htmlOutputs.find(
+      ([path]) => path.split(/[\\/]/).pop()?.toLowerCase() === "index.html",
+    );
+    const otherHtmlOutputs = htmlOutputs.filter(
+      ([path]) => path !== indexOutput?.[0],
+    );
+    const documentation = documentEntries.map(([path, source]) => ({
+      name: path.split(/[\\/]/).pop() || "Dokumentasi",
+      ...renderMarkdown(source),
+    }));
+    const sourceOutputs = entries.filter(
+      ([path]) =>
+        !path.toLowerCase().endsWith(".html") &&
+        !path.toLowerCase().endsWith("readme.md"),
+    );
+    return (
+      <section className="output-section">
+        <div className="output-intro">
+          <span className="eyebrow">HASIL PRAKTIKUM</span>
+          <h2>{title}</h2>
+          <p>{description}</p>
+        </div>
+        {indexOutput && (
+          <div className="demo-list output-index-preview">
+            {demo(indexOutput)}
+          </div>
+        )}
+        {documentation.map((doc) => (
+          <article className="output-document markdown-content" key={doc.name}>
+            <div className="document-label">
+              {icon("engineering")} {doc.name}
+            </div>
+            <div dangerouslySetInnerHTML={{ __html: doc.html }} />
+          </article>
+        ))}
+        {sourceOutputs.length > 0 && (
+          <div className="output-grid">
+            {sourceOutputs.map(([path, url]) => (
+              <a
+                className="output-card"
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                key={path}
+              >
+                {icon("open_in_new")}
+                <span>{path.split(/[\\/]/).slice(-2).join("/")}</span>
+              </a>
+            ))}
+          </div>
+        )}
+        {otherHtmlOutputs.length > 0 && (
+          <div className="demo-list">{otherHtmlOutputs.map(demo)}</div>
+        )}
+      </section>
+    );
+  };
   return (
     <div className="output-panel">
-      <div className="output-intro">
-        <span className="eyebrow">HASIL PRAKTIKUM</span>
-        <h2>Contoh output</h2>
-        <p>
-          Demo dapat dicoba langsung di bawah. Parameter kontrol dan penjelasan
-          teknis ditampilkan bersama output.
-        </p>
-      </div>
-      {indexOutput && (
-        <div className="demo-list output-index-preview">
-          {demo(indexOutput)}
-        </div>
+      {renderOutputGroup(
+        "Output Utama",
+        "Demo utama Pertemuan 2 dapat dicoba langsung di bawah.",
+        mainOutput,
+        mainDocs,
       )}
-      {documentation.map((doc) => (
-        <article className="output-document markdown-content" key={doc.name}>
-          <div className="document-label">
-            {icon("engineering")} {doc.name}
-          </div>
-          <div dangerouslySetInnerHTML={{ __html: doc.html }} />
-        </article>
-      ))}
+      {renderOutputGroup(
+        "Output Pengayaan",
+        "Demo pengayaan WebGL2 best practice untuk Pertemuan 2.",
+        enrichmentOutput,
+        enrichmentDocs,
+      )}
       {output.length ? (
-        <>
-          {sourceOutputs.length > 0 && (
-            <div className="output-grid">
-              {sourceOutputs.map(([path, url]) => (
-                <a
-                  className="output-card"
-                  href={url}
-                  target="_blank"
-                  rel="noreferrer"
-                  key={path}
-                >
-                  {icon("open_in_new")}
-                  <span>{path.split(/[\\/]/).pop()}</span>
-                </a>
-              ))}
-            </div>
-          )}
-          {otherHtmlOutputs.length > 0 && (
-            <div className="demo-list">{otherHtmlOutputs.map(demo)}</div>
-          )}
-        </>
+        null
       ) : (
         <EmptyState text="Contoh output belum tersedia untuk pertemuan ini." />
       )}
