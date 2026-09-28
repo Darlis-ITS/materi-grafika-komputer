@@ -36,6 +36,7 @@ Output ini mengerjakan tugas utama serta Challenge A–G dari modul Praktikum 5.
 | Light X/Y/Z | Mengatur posisi point light |
 | Light orbit | Membuat light mengorbit cube |
 | Camera orbit | Menggerakkan camera mengorbit target |
+| Stop / Resume Cube Rotation (P) | Menghentikan atau melanjutkan putaran kubus tanpa menghentikan orbit kamera dan lampu |
 | Flat / Smooth | Mengganti face normal dengan smooth vertex normal |
 | Texture source | Checkerboard procedural atau image texture SVG |
 | Filtering | NEAREST, LINEAR, atau LINEAR + mipmap |
@@ -78,6 +79,8 @@ Ambient memberi penerangan dasar, diffuse bergantung pada arah surface terhadap 
 UV menentukan lokasi sampling texture. Demo menyediakan checkerboard yang dibuat dengan Canvas API dan image texture SVG. Filtering dapat dibandingkan melalui NEAREST, LINEAR, dan mipmap. Wrapping menentukan perilaku ketika UV berada di luar rentang 0–1.
 
 ### Camera dan animation
+
+Tombol **Stop Cube Rotation (P)** membekukan orientasi kubus pada posisi terakhir. Tekan kembali untuk melanjutkan putaran dari posisi tersebut. Camera Orbit dan Light Orbit memakai waktu animasi terpisah dari putaran kubus sehingga tetap berjalan saat kubus berhenti. Saat Camera Orbit aktif, kubus tetap terlihat berubah sudut pandang karena kamera bergerak mengelilinginya. Reset Scene mengaktifkan kembali putaran kubus dan mengembalikan orientasinya ke awal.
 
 Camera menggunakan look-at View Matrix dan perspective Projection Matrix. Camera serta light dapat dikontrol dengan state-based input. Cube berputar otomatis menggunakan delta time agar kecepatan tidak bergantung pada frame rate.
 

@@ -346,6 +346,8 @@ const state = {
   scale: [1, 1, 1],
   components: { ambient: true, diffuse: true, specular: true },
   time: 0,
+  cubeRotation: true,
+  cubeTime: 0,
 };
 
 function createCheckerTexture() {
@@ -415,8 +417,8 @@ function modelMatrix() {
   return multiply(
     translation(0, 0, 0),
     multiply(
-      rotationY(state.time * 35),
-      multiply(rotationX(state.time * 22), scale(...state.scale)),
+      rotationY(state.cubeTime * 35),
+      multiply(rotationX(state.cubeTime * 22), scale(...state.scale)),
     ),
   );
 }
@@ -483,6 +485,9 @@ function updateCamera(deltaTime) {
   }
 }
 function updateHud() {
+  document.querySelector("#cubeRotationButton").textContent = state.cubeRotation
+    ? "Stop Cube Rotation (P)"
+    : "Resume Cube Rotation (P)";
   document.querySelector("#shadingInfo").textContent = state.flat
     ? "FLAT"
     : "SMOOTH";
@@ -513,6 +518,8 @@ function reset() {
     scale: [1, 1, 1],
     light: [2, 2, 3],
     time: 0,
+    cubeRotation: true,
+    cubeTime: 0,
   });
   state.camera.position = [0, 1.3, 5];
   state.camera.target = [0, 0, 0];
@@ -543,6 +550,9 @@ function reset() {
   updateTextureState();
 }
 function bindControls() {
+  document.querySelector("#cubeRotationButton").onclick = () => {
+    state.cubeRotation = !state.cubeRotation;
+  };
   document.querySelector("#ambientControl").oninput = (e) => {
     state.ambient = Number(e.target.value);
     document.querySelector("#ambientValue").textContent =
@@ -610,6 +620,7 @@ window.addEventListener("keydown", (event) => {
   if (key === "f") state.flat = !state.flat;
   if (key === "t") state.texture = !state.texture;
   if (key === "l") state.lightOrbit = !state.lightOrbit;
+  if (key === "p") state.cubeRotation = !state.cubeRotation;
 });
 window.addEventListener("keyup", (event) => {
   const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
@@ -620,6 +631,7 @@ function render(time) {
   const dt = Math.min((time - lastTime) * 0.001, 0.05);
   lastTime = time;
   state.time += dt;
+  if (state.cubeRotation) state.cubeTime += dt;
   updateCamera(dt);
   draw();
   requestAnimationFrame(render);
