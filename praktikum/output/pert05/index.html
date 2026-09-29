@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Textured and Lit Cube Playground — Praktikum 5</title>
+    <title>Textured and Lit Object Playground — Praktikum 5</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
@@ -13,7 +13,7 @@
           <span class="eyebrow"
             >PRAKTIKUM 05 · LIGHTING, SHADING & TEXTURE</span
           >
-          <h1>Textured and Lit Cube Playground</h1>
+          <h1>Textured and Lit Object Playground</h1>
           <p>
             Amati hubungan normal, texture, point light, camera, dan fragment
             shading.
@@ -49,7 +49,16 @@
         </section>
         <aside class="control-panel">
           <span class="eyebrow">PARAMETER CONTROL</span
-          ><label class="range-row"
+          >
+          <label class="select-row">Bentuk objek
+            <select id="shapeSelect">
+              <option value="cube">Kubus</option>
+              <option value="torus">Torus</option>
+              <option value="torusKnot">Torus Knot</option>
+              <option value="sphere">Bola</option>
+            </select>
+          </label>
+          <label class="range-row"
             ><span>Ambient strength</span
             ><output id="ambientValue">0.18</output></label
           ><input
@@ -104,7 +113,7 @@
             ><button id="cameraOrbitButton">Camera Orbit</button>
           </div>
           <button class="wide-button" id="cubeRotationButton">
-            Stop Cube Rotation (P)
+            Stop Object Rotation (P)
           </button>
           <label class="select-row"
             >Texture source<select id="textureSource">
@@ -169,7 +178,7 @@
             <b>Keyboard</b><span>Arrow: light X/Y · W/S: light Z</span
             ><span>Q/E: camera X · F: flat/smooth</span
             ><span>T: texture · L: light orbit · R: reset</span>
-            <span>P: stop/resume cube rotation</span>
+            <span>P: stop/resume object rotation</span>
           </div>
         </aside>
       </div>

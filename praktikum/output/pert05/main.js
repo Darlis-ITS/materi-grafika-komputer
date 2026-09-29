@@ -179,21 +179,95 @@ function cubeData() {
   return { positions, normals, uvs };
 }
 
-const geometry = cubeData();
-const positionBuffer = createBuffer(geometry.positions);
-const faceNormalBuffer = createBuffer(geometry.normals);
-const smoothNormals = geometry.positions.reduce((result, _, index) => {
-  if (index % 3 === 0) {
-    const x = geometry.positions[index];
-    const y = geometry.positions[index + 1];
-    const z = geometry.positions[index + 2];
-    const length = Math.hypot(x, y, z) || 1;
-    result.push(x / length, y / length, z / length);
+// Parametric surfaces keep this WebGL2 example usable without external libraries.
+function curvedData(shape) {
+  const tau = Math.PI * 2;
+  function knotCenter(t) {
+    const radius = 0.68 + 0.24 * Math.cos(3 * t);
+    return [radius * Math.cos(2 * t), radius * Math.sin(2 * t),
+      0.24 * Math.sin(3 * t)];
   }
-  return result;
-}, []);
-const smoothNormalBuffer = createBuffer(smoothNormals);
-const uvBuffer = createBuffer(geometry.uvs);
+  function surface(u, v) {
+    const t = u * tau, angle = v * tau;
+    if (shape === "sphere") {
+      const latitude = v * Math.PI;
+      const normal = [Math.sin(latitude) * Math.cos(t), Math.cos(latitude),
+        Math.sin(latitude) * Math.sin(t)];
+      return { position: normal.map(value => value * 1.05), normal };
+    }
+    if (shape === "torus") {
+      const normal = [Math.cos(t) * Math.cos(angle),
+        Math.sin(t) * Math.cos(angle), Math.sin(angle)];
+      return { position: [(0.78 + 0.3 * Math.cos(angle)) * Math.cos(t),
+        (0.78 + 0.3 * Math.cos(angle)) * Math.sin(t), 0.3 * Math.sin(angle)], normal };
+    }
+    const center = knotCenter(t);
+    const tangent = normalize(subtract(knotCenter(t + 0.0001), knotCenter(t - 0.0001)));
+    // The planar tangent never vanishes for this (2, 3) knot. This frame is periodic.
+    const side = normalize(cross(tangent, [0, 0, 1]));
+    const up = normalize(cross(side, tangent));
+    const normal = side.map((value, i) => value * Math.cos(angle) + up[i] * Math.sin(angle));
+    return { position: center.map((value, i) => value + 0.15 * normal[i]), normal };
+  }
+  const positions = [], normals = [], smoothNormals = [], uvs = [];
+  const columns = shape === "torusKnot" ? 160 : 64;
+  const rows = 32;
+  function vertex(u, v) {
+    const sample = surface(u, v);
+    // Surface derivatives give the actual normal, including the tube frame's twist.
+    if (shape === "torusKnot") {
+      const du = subtract(surface(u + 0.00001, v).position, surface(u - 0.00001, v).position);
+      const dv = subtract(surface(u, v + 0.00001).position, surface(u, v - 0.00001).position);
+      let normal = normalize(cross(du, dv));
+      if (dot(normal, sample.normal) < 0) normal = normal.map(value => -value);
+      sample.normal = normal;
+    }
+    return { ...sample, uv: [u * 2, v * 2] };
+  }
+  const grid = Array.from({ length: columns + 1 }, (_, x) =>
+    Array.from({ length: rows + 1 }, (_, y) => vertex(x / columns, y / rows)));
+  function triangle(a, b, c) {
+    let face = cross(subtract(b.position, a.position), subtract(c.position, a.position));
+    if (Math.hypot(...face) < 1e-10) return; // Skip collapsed sphere pole triangles.
+    if (dot(face, a.normal) < 0) {
+      [b, c] = [c, b];
+      face = face.map(value => -value);
+    }
+    face = normalize(face);
+    for (const point of [a, b, c]) {
+      positions.push(...point.position);
+      normals.push(...face);
+      smoothNormals.push(...point.normal);
+      uvs.push(...point.uv);
+    }
+  }
+  for (let x = 0; x < columns; x += 1) {
+    for (let y = 0; y < rows; y += 1) {
+      triangle(grid[x][y], grid[x + 1][y], grid[x + 1][y + 1]);
+      triangle(grid[x][y], grid[x + 1][y + 1], grid[x][y + 1]);
+    }
+  }
+  return { positions, normals, smoothNormals, uvs };
+}
+
+const meshes = new Map();
+function getMesh(shape) {
+  if (meshes.has(shape)) return meshes.get(shape);
+  const geometry = shape === "cube" ? cubeData() : curvedData(shape);
+  const smoothNormals = geometry.smoothNormals || geometry.positions.reduce((result, _, index) => {
+    if (index % 3 === 0) result.push(...normalize(geometry.positions.slice(index, index + 3)));
+    return result;
+  }, []);
+  const mesh = {
+    position: createBuffer(geometry.positions),
+    flat: createBuffer(geometry.normals),
+    smooth: createBuffer(smoothNormals),
+    uv: createBuffer(geometry.uvs),
+    count: geometry.positions.length / 3,
+  };
+  meshes.set(shape, mesh);
+  return mesh;
+}
 
 function createBuffer(data) {
   const buffer = gl.createBuffer();
@@ -334,6 +408,7 @@ const state = {
   light: [2, 2, 3],
   ambient: 0.18,
   shininess: 32,
+  shape: "cube",
   flat: true,
   texture: true,
   textureSource: "checker",
@@ -429,13 +504,14 @@ function draw() {
   gl.useProgram(program);
   if (state.depth) gl.enable(gl.DEPTH_TEST);
   else gl.disable(gl.DEPTH_TEST);
-  bindAttribute(positionLocation, positionBuffer, 3);
+  const mesh = getMesh(state.shape);
+  bindAttribute(positionLocation, mesh.position, 3);
   bindAttribute(
     normalLocation,
-    state.flat ? faceNormalBuffer : smoothNormalBuffer,
+    state.flat ? mesh.flat : mesh.smooth,
     3,
   );
-  bindAttribute(uvLocation, uvBuffer, 2);
+  bindAttribute(uvLocation, mesh.uv, 2);
   const model = modelMatrix(),
     view = lookAt(state.camera.position, state.camera.target, state.camera.up),
     projection = perspective(60, canvas.width / canvas.height, 0.1, 30);
@@ -462,7 +538,7 @@ function draw() {
     state.textureSource === "image" ? imageTexture : checkerTexture,
   );
   gl.uniform1i(locations.texture, 0);
-  gl.drawArrays(gl.TRIANGLES, 0, geometry.positions.length / 3);
+  gl.drawArrays(gl.TRIANGLES, 0, mesh.count);
   updateHud();
 }
 function updateCamera(deltaTime) {
@@ -486,8 +562,8 @@ function updateCamera(deltaTime) {
 }
 function updateHud() {
   document.querySelector("#cubeRotationButton").textContent = state.cubeRotation
-    ? "Stop Cube Rotation (P)"
-    : "Resume Cube Rotation (P)";
+    ? "Stop Object Rotation (P)"
+    : "Resume Object Rotation (P)";
   document.querySelector("#shadingInfo").textContent = state.flat
     ? "FLAT"
     : "SMOOTH";
@@ -507,6 +583,7 @@ function reset() {
   Object.assign(state, {
     ambient: 0.18,
     shininess: 32,
+    shape: "cube",
     flat: true,
     texture: true,
     textureSource: "checker",
@@ -521,6 +598,7 @@ function reset() {
     cubeRotation: true,
     cubeTime: 0,
   });
+  document.querySelector("#shapeSelect").value = state.shape;
   state.camera.position = [0, 1.3, 5];
   state.camera.target = [0, 0, 0];
   [
@@ -550,6 +628,11 @@ function reset() {
   updateTextureState();
 }
 function bindControls() {
+  document.querySelector("#shapeSelect").onchange = (event) => {
+    state.shape = event.target.value;
+    // Curved surfaces start smooth; F still lets learners compare triangle normals.
+    state.flat = state.shape === "cube";
+  };
   document.querySelector("#cubeRotationButton").onclick = () => {
     state.cubeRotation = !state.cubeRotation;
   };

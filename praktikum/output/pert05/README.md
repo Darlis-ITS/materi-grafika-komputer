@@ -1,4 +1,4 @@
-# Output Praktikum 5 — Textured and Lit Cube Playground
+# Output Praktikum 5 — Textured and Lit Object Playground
 
 Output ini mengerjakan tugas utama serta Challenge A–G dari modul Praktikum 5.
 
@@ -36,7 +36,7 @@ Output ini mengerjakan tugas utama serta Challenge A–G dari modul Praktikum 5.
 | Light X/Y/Z | Mengatur posisi point light |
 | Light orbit | Membuat light mengorbit cube |
 | Camera orbit | Menggerakkan camera mengorbit target |
-| Stop / Resume Cube Rotation (P) | Menghentikan atau melanjutkan putaran kubus tanpa menghentikan orbit kamera dan lampu |
+| Stop / Resume Object Rotation (P) | Menghentikan atau melanjutkan putaran kubus tanpa menghentikan orbit kamera dan lampu |
 | Flat / Smooth | Mengganti face normal dengan smooth vertex normal |
 | Texture source | Checkerboard procedural atau image texture SVG |
 | Filtering | NEAREST, LINEAR, atau LINEAR + mipmap |
@@ -80,7 +80,7 @@ UV menentukan lokasi sampling texture. Demo menyediakan checkerboard yang dibuat
 
 ### Camera dan animation
 
-Tombol **Stop Cube Rotation (P)** membekukan orientasi kubus pada posisi terakhir. Tekan kembali untuk melanjutkan putaran dari posisi tersebut. Camera Orbit dan Light Orbit memakai waktu animasi terpisah dari putaran kubus sehingga tetap berjalan saat kubus berhenti. Saat Camera Orbit aktif, kubus tetap terlihat berubah sudut pandang karena kamera bergerak mengelilinginya. Reset Scene mengaktifkan kembali putaran kubus dan mengembalikan orientasinya ke awal.
+Tombol **Stop Object Rotation (P)** membekukan orientasi kubus pada posisi terakhir. Tekan kembali untuk melanjutkan putaran dari posisi tersebut. Camera Orbit dan Light Orbit memakai waktu animasi terpisah dari putaran kubus sehingga tetap berjalan saat kubus berhenti. Saat Camera Orbit aktif, kubus tetap terlihat berubah sudut pandang karena kamera bergerak mengelilinginya. Reset Scene mengaktifkan kembali putaran kubus dan mengembalikan orientasinya ke awal.
 
 Camera menggunakan look-at View Matrix dan perspective Projection Matrix. Camera serta light dapat dikontrol dengan state-based input. Cube berputar otomatis menggunakan delta time agar kecepatan tidak bergantung pada frame rate.
 
@@ -94,3 +94,11 @@ Camera menggunakan look-at View Matrix dan perspective Projection Matrix. Camera
 - [x] Animated cube
 - [x] State-based light/camera control
 - [x] Challenge A–G
+
+## Pilihan bentuk objek
+
+Dropdown **Bentuk objek** menyediakan Kubus, Torus, Torus Knot, dan Bola. Geometri dibuat langsung di JavaScript dan dirender dengan WebGL2, tanpa library tambahan. Setiap bentuk memiliki UV, normal per segitiga untuk Flat, dan normal permukaan untuk Smooth. Buffer geometri disimpan agar pergantian bentuk tidak terus membuat buffer baru.
+
+Bentuk melengkung otomatis memakai Smooth saat dipilih; kubus memakai Flat. Tombol F tetap dapat mengganti keduanya. Semua kontrol lighting, tekstur, skala, rotasi objek, serta orbit kamera/lampu berlaku pada bentuk terpilih. Pergantian bentuk mempertahankan pengaturan tersebut kecuali mode Flat/Smooth. Reset kembali ke kubus.
+
+Untuk mengamati highlight, pilih Torus Knot atau Bola, matikan Texture, lalu bandingkan shininess rendah dan tinggi. Hentikan Object Rotation untuk membekukan objek; Camera Orbit tetap mengubah sudut pandang. Demo belum menghitung bayangan antarpermukaan (self-shadow), termasuk pada lekukan torus knot.
