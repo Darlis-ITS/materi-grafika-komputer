@@ -11,21 +11,78 @@ npm run dev -- --port 3400
 
 Output ini menggunakan Three.js dan `GLTFLoader`. HTML, JavaScript, dan CSS dipisahkan agar mudah dibaca dan dimodifikasi.
 
+Output juga dapat dibuka melalui **Live Server** di VS Code. Gunakan server HTTP,
+bukan membuka `index.html` langsung melalui `file://`, agar ES module dan `Duck.glb`
+dapat dimuat. Import map di HTML memetakan `"three"` dan `"three/addons/"` ke
+Three.js versi `0.185.1` di jsDelivr; koneksi internet diperlukan saat menggunakan
+server statis.
+
 ## Parameter control
+
+| Parameter OrbitControls | Fungsi / nilai awal |
+| --- | --- |
+| Aktifkan kontrol kamera | Mengaktifkan input orbit, zoom, dan pan; awal aktif |
+| Izinkan pan | Mengizinkan drag kanan menggeser kamera dan target; awal aktif |
+| Damping | Memperhalus gerakan setelah input berhenti; awal aktif |
+| Damping factor | 0.01–0.25; awal 0.05. Nilai lebih besar membuat gerakan berhenti lebih cepat |
+| Camera rotate speed | 0.1–3; awal 1.00. Mengatur sensitivitas drag orbit kamera |
+| Camera zoom speed | 0.1–3; awal 1.00. Mengatur sensitivitas scroll zoom |
+
+Pengaturan langsung diterapkan dan dipertahankan ketika berganti kamera.
+Damping factor hanya dapat diubah saat Damping aktif. Reset (R) mengembalikan
+semua parameter OrbitControls ke nilai awal.
 
 | Kontrol                      | Fungsi                                                                                                                                 |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Drag tombol kiri | Orbit kamera mengelilingi target. |
+| Scroll mouse | Zoom mendekat atau menjauh. |
+| Drag tombol kanan | Pan kamera beserta target. |
 | Active camera                | Memilih Perspective Camera atau Orthographic Camera.                                                                                   |
 | Camera FOV                   | Mengatur field of view kamera perspektif, 25–100 derajat.                                                                              |
 | Roughness                    | Mengubah kekasaran material PBR pada gallery sphere. Nilai kecil menghasilkan highlight tajam; nilai besar lebih diffuse.              |
 | Metalness                    | Mengubah karakter non-metal hingga metal. Material metal sangat bergantung pada environment untuk memperoleh refleksi yang masuk akal. |
 | Orbit speed                  | Mengatur kecepatan rotasi hierarchy tata surya dan orbit lampu.                                                                        |
 | Environment (E)              | Membandingkan `scene.environment` aktif dan nonaktif.                                                                                  |
-| Reset (R)                    | Mengembalikan environment, selection, hierarchy, dan solar animation.                                                                  |
+| Reset (R)                    | Mengembalikan kamera, environment, selection, hierarchy, dan solar animation.                                                                  |
 | Clip 1/2/3 atau tombol 1/2/3 | Mengganti `AnimationAction` jika GLB menyediakan beberapa clip.                                                                        |
 | Solar (S)                    | Pause/resume parent-child hierarchy Sun–Earth–Moon.                                                                                    |
 
 Interaksi mouse menggunakan `pointermove` untuk hover dan `click` untuk selection. Hover memberi emissive dan scale 1.06. Selection disimpan terpisah, memberi scale 1.12, rotasi berkelanjutan, dan mengisi panel informasi.
+
+## OrbitControls — navigasi dan selection
+
+OrbitControls dipakai untuk menjelajahi scene dan model GLB. Drag kiri melakukan
+orbit kamera, scroll mengatur zoom, dan drag kanan melakukan pan. Klik kiri tanpa
+drag memilih objek dan memperbarui panel informasi. Slider Orbit speed mengatur
+animasi hierarchy tata surya dan lampu; navigasi kamera memakai mouse.
+
+Kontrol diimpor dari `three/addons/controls/OrbitControls.js`, menggunakan kamera
+aktif dan `renderer.domElement`, dengan target awal `(0, 1, 0)`.
+`enableDamping = true` memperhalus gerakan; `controls.update()` dipanggil sebelum
+`composer.render()` pada setiap frame.
+
+| Pengaturan | Nilai dan fungsi |
+| --- | --- |
+| `minDistance / maxDistance` | 3 / 25, batas jarak PerspectiveCamera dari target |
+| `minZoom / maxZoom` | 0.5 / 3, batas zoom OrthographicCamera |
+| `maxPolarAngle` | `Math.PI / 2 - 0.05`, batas orbit mendekati 90 derajat |
+
+Batas polar berlaku terhadap target; pan masih dapat menggeser target sehingga
+pengaturan ini tidak menjamin posisi kamera selalu di atas ground.
+
+Pergantian kamera mempertahankan posisi dan target, membuat ulang OrbitControls,
+dan memperbarui `renderPass.camera`. Reset (R) mengembalikan PerspectiveCamera ke
+`(7.5, 5.2, 9.5)`, target awal, FOV 52, dan zoom 1.
+
+Untuk mencegah selection setelah orbit/pan, posisi pointer dicatat sejak
+`pointerdown`. Gerakan lebih dari 5 piksel dianggap drag, termasuk ketika pointer
+kembali ke titik awal. Event `click` setelah drag diabaikan; hover ditangguhkan
+selama pointer ditekan. `pointercancel` membatalkan gesture dan klik berikutnya
+dapat digunakan kembali untuk selection.
+
+**Coba:** klik objek untuk memilih, drag melewati objek lain, lalu pastikan
+selection tetap sama. Uji zoom pada kedua mode kamera dan tekan R untuk
+mengembalikan tampilan awal.
 
 ## Komponen teknis yang diimplementasikan
 

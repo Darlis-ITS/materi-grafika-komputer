@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Three.js Mini 3D Scene — Praktikum 6</title>
     <link rel="stylesheet" href="./style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+        }
+      }
+    </script>
   </head>
   <body>
     <main class="app-shell">
@@ -82,6 +90,22 @@
             max="48"
             value="24"
           />
+          <fieldset class="orbit-settings">
+            <legend>OrbitControls · Camera</legend>
+            <label><input type="checkbox" data-orbit-setting="enabled" checked /> Aktifkan kontrol kamera</label>
+            <label><input type="checkbox" data-orbit-setting="enablePan" checked /> Izinkan pan</label>
+            <label><input type="checkbox" data-orbit-setting="enableDamping" checked /> Damping</label>
+            <label class="range-row" for="cameraDampingFactor"><span>Damping factor</span><output id="cameraDampingFactorValue">0.05</output></label>
+            <input id="cameraDampingFactor" data-orbit-setting="dampingFactor" type="range" min="0.01" max="0.25" step="0.01" value="0.05" />
+            <label class="range-row" for="cameraRotateSpeed"><span>Camera rotate speed</span><output id="cameraRotateSpeedValue">1.00</output></label>
+            <input id="cameraRotateSpeed" data-orbit-setting="rotateSpeed" type="range" min="0.1" max="3" step="0.1" value="1" />
+            <label class="range-row" for="cameraZoomSpeed"><span>Camera zoom speed</span><output id="cameraZoomSpeedValue">1.00</output></label>
+            <input id="cameraZoomSpeed" data-orbit-setting="zoomSpeed" type="range" min="0.1" max="3" step="0.1" value="1" />
+          </fieldset>
+          <label class="select-row" for="lightHelperControl">
+            Light helpers
+            <input id="lightHelperControl" type="checkbox" checked />
+          </label>
           <div class="button-grid">
             <button id="cameraButton">Camera (C)</button
             ><button id="lightOrbitButton">Light orbit (L)</button
@@ -90,7 +114,10 @@
           </div>
           <button class="wide-button" id="resetButton">Reset Scene (R)</button>
           <div class="keyboard-help">
-            <b>Keyboard</b><span>Arrow / WASD: move cube utama</span
+            <b>Camera &amp; Keyboard</b>
+            <span>Drag kiri: orbit · scroll: zoom</span>
+            <span>Drag kanan: pan · R: reset kamera</span>
+            <span>Arrow / WASD: move cube utama</span
             ><span>Q/E: rotate cube utama</span
             ><span>C: camera · L: light orbit · H: gallery</span
             ><span>G: pause · R: reset</span>

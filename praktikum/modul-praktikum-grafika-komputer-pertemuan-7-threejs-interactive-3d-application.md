@@ -36,6 +36,9 @@ Animation Loop
 
 Pada Pertemuan 7, scene tersebut dikembangkan menjadi **aplikasi 3D interaktif**.
 
+OrbitControls dasar dari Pertemuan 6 digunakan kembali dan diintegrasikan dengan
+pergantian kamera, pembatasan navigasi, hover, serta click selection.
+
 Komponen baru yang dipelajari:
 
 ```text
@@ -1346,6 +1349,80 @@ Gunakan delta untuk:
 - animasi procedural.
 
 ---
+
+## 39.1 Integrasi OrbitControls dengan Interaksi Objek
+
+Gunakan OrbitControls dari Pertemuan 6 untuk menjelajahi model GLB dan hierarchy.
+Tambahkan batas navigasi setelah kontrol dibuat:
+
+```js
+controls.minDistance = 3;
+controls.maxDistance = 25;
+controls.minZoom = 0.5;
+controls.maxZoom = 3;
+controls.maxPolarAngle = Math.PI / 2 - 0.05;
+```
+
+`minDistance/maxDistance` membatasi jarak pada PerspectiveCamera;
+`minZoom/maxZoom` membatasi zoom pada OrthographicCamera. Batas polar mencegah
+kamera mengorbit ke bawah bidang horizontal melalui target. Pan masih dapat
+menggeser target, sehingga batas ini bukan pembatas posisi kamera terhadap ground.
+
+Panggil `controls.update()` sebelum render setiap frame dan hapus
+`camera.lookAt()` yang dipanggil berulang. Jika memakai EffectComposer,
+perbarui `renderPass.camera` ketika kamera aktif berubah. Salin posisi kamera dan
+target sebelum `dispose()` dan pembuatan kontrol baru; perubahan mode kamera
+tidak boleh memaksa target kembali ke pusat scene.
+
+### Membedakan click dan drag
+
+Drag untuk orbit/pan dapat diikuti event `click`. Selection hanya boleh berjalan
+untuk klik tanpa drag. Simpan posisi saat `pointerdown`, lalu tandai drag ketika
+jarak gerakan melebihi 5 piksel. Flag tetap aktif walaupun pointer kembali ke
+posisi awal. Gunakan pola berikut sebelum handler hover dan selection:
+
+```js
+let selectionGesture = null;
+let suppressSelection = false;
+renderer.domElement.addEventListener("pointerdown", (event) => {
+  suppressSelection = event.button !== 0 || selectionGesture !== null;
+  selectionGesture = { id: event.pointerId, x: event.clientX, y: event.clientY };
+});
+window.addEventListener("pointermove", (event) => {
+  if (!selectionGesture || event.pointerId !== selectionGesture.id) return;
+  if (Math.hypot(event.clientX - selectionGesture.x,
+                 event.clientY - selectionGesture.y) > 5)
+    suppressSelection = true;
+}, true);
+window.addEventListener("pointerup", (event) => {
+  if (event.pointerId === selectionGesture?.id) selectionGesture = null;
+});
+window.addEventListener("pointercancel", () => {
+  selectionGesture = null;
+  suppressSelection = true;
+});
+```
+
+Di awal handler `click`, tambahkan
+`if (suppressSelection || event.button !== 0) return;`.
+Di awal handler hover `pointermove`, tambahkan
+`if (selectionGesture) return;` agar feedback hover tidak berubah selama drag.
+Event gerakan dipantau pada window dengan capture agar tetap tercatat ketika
+OrbitControls menangkap pointer.
+
+**Pemeriksaan integrasi:**
+
+- [ ] Drag kiri mengorbit; scroll melakukan zoom; drag kanan melakukan pan.
+- [ ] Klik biasa tetap memilih objek/GLB dan memperbarui panel informasi.
+- [ ] Drag melewati objek, termasuk kembali ke titik awal, tidak mengubah selection.
+- [ ] Pointer yang dibatalkan tidak memicu selection; klik berikutnya tetap bekerja.
+- [ ] Batas jarak Perspective dan zoom Orthographic bekerja.
+- [ ] Pergantian kamera mempertahankan posisi dan target serta memperbarui RenderPass.
+- [ ] Reset mengembalikan PerspectiveCamera, target, FOV, dan zoom awal.
+
+Gunakan import map core dan `three/addons/` seperti Pertemuan 6 jika menjalankan
+output melalui Live Server. Rujukan:
+[OrbitControls — dokumentasi Three.js](https://threejs.org/docs/pages/OrbitControls.html).
 
 # 40. Raycasting — Konsep
 

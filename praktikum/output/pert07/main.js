@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -46,6 +47,49 @@ const state = {
   activeAction: null,
 };
 const cameraTarget = new THREE.Vector3(0, 1, 0);
+let controls;
+const orbitDefaults = {
+  enabled: true, enableDamping: true, enablePan: true,
+  dampingFactor: 0.05, rotateSpeed: 1, zoomSpeed: 1,
+};
+const orbitSettings = { ...orbitDefaults };
+function applyOrbitSettings() {
+  Object.assign(controls, orbitSettings);
+  document.querySelector("#cameraDampingFactor").disabled = !orbitSettings.enableDamping;
+}
+function resetOrbitSettings() {
+  Object.assign(orbitSettings, orbitDefaults);
+  for (const [key, value] of Object.entries(orbitSettings)) {
+    const input = document.querySelector(`[data-orbit-setting="${key}"]`);
+    if (typeof value === "boolean") input.checked = value;
+    else {
+      input.value = value;
+      document.querySelector(`#${input.id}Value`).textContent = value.toFixed(2);
+    }
+  }
+}
+document.querySelectorAll("[data-orbit-setting]").forEach((input) => {
+  input.addEventListener("input", () => {
+    orbitSettings[input.dataset.orbitSetting] =
+      input.type === "checkbox" ? input.checked : Number(input.value);
+    if (input.type !== "checkbox")
+      document.querySelector(`#${input.id}Value`).textContent = Number(input.value).toFixed(2);
+    applyOrbitSettings();
+  });
+});
+function configureControls(target = cameraTarget) {
+  controls?.dispose();
+  controls = new OrbitControls(activeCamera, renderer.domElement);
+  controls.target.copy(target);
+  applyOrbitSettings();
+  controls.minDistance = 3;
+  controls.maxDistance = 25;
+  controls.minZoom = 0.5;
+  controls.maxZoom = 3;
+  controls.maxPolarAngle = Math.PI / 2 - 0.05;
+  controls.update();
+}
+configureControls();
 
 const environmentTexture = createEnvironmentTexture();
 environmentTexture.mapping = THREE.EquirectangularReflectionMapping;
@@ -377,7 +421,27 @@ function raycast(event) {
   const hit = raycaster.intersectObjects(interactiveObjects, true)[0];
   return hit ? objectRoot(hit.object) : null;
 }
+let selectionGesture = null;
+let suppressSelection = false;
+renderer.domElement.addEventListener("pointerdown", (event) => {
+  suppressSelection = event.button !== 0 || selectionGesture !== null;
+  selectionGesture = { id: event.pointerId, x: event.clientX, y: event.clientY };
+});
+// Remember the maximum movement, including a drag that returns to its start.
+window.addEventListener("pointermove", (event) => {
+  if (!selectionGesture || event.pointerId !== selectionGesture.id) return;
+  if (Math.hypot(event.clientX - selectionGesture.x, event.clientY - selectionGesture.y) > 5)
+    suppressSelection = true;
+}, true);
+window.addEventListener("pointerup", (event) => {
+  if (event.pointerId === selectionGesture?.id) selectionGesture = null;
+});
+window.addEventListener("pointercancel", () => {
+  selectionGesture = null;
+  suppressSelection = true;
+});
 renderer.domElement.addEventListener("pointermove", (event) => {
+  if (selectionGesture) return;
   const next = raycast(event);
   if (next === state.hovered) return;
   if (state.hovered && state.hovered !== state.selected) {
@@ -405,6 +469,7 @@ renderer.domElement.addEventListener("pointerleave", () => {
   bloomPass.strength = 0;
 });
 renderer.domElement.addEventListener("click", (event) => {
+  if (suppressSelection || event.button !== 0) return;
   const next = raycast(event);
   if (state.selected && state.selected !== next) {
     setEmissive(state.selected, false);
@@ -426,10 +491,14 @@ renderer.domElement.addEventListener("click", (event) => {
 });
 
 $("#cameraSelect").addEventListener("change", (event) => {
+  const previousCamera = activeCamera;
+  const target = controls.target.clone();
   activeCamera =
     event.target.value === "orthographic"
       ? orthographicCamera
       : perspectiveCamera;
+  activeCamera.position.copy(previousCamera.position);
+  configureControls(target);
   updateCamera();
 });
 $("#fovControl").addEventListener("input", (event) => {
@@ -485,6 +554,18 @@ function toggleEnvironment() {
   );
 }
 function resetScene() {
+  resetOrbitSettings();
+  activeCamera = perspectiveCamera;
+  perspectiveCamera.position.set(7.5, 5.2, 9.5);
+  orthographicCamera.position.copy(perspectiveCamera.position);
+  perspectiveCamera.fov = 52;
+  perspectiveCamera.zoom = orthographicCamera.zoom = 1;
+  configureControls();
+  resize();
+  updateCamera();
+  $("#cameraSelect").value = "perspective";
+  $("#fovControl").value = 52;
+  $("#fovValue").textContent = "52°";
   state.environment = true;
   state.solar = true;
   state.selected = null;
@@ -498,8 +579,7 @@ function resetScene() {
   log("Scene di-reset. Klik objek untuk memilih.");
 }
 function updateCamera() {
-  activeCamera.position.set(7.5, 5.2, 9.5);
-  activeCamera.lookAt(cameraTarget);
+  controls.update();
   activeCamera.updateProjectionMatrix();
   renderPass.camera = activeCamera;
 }
@@ -539,7 +619,7 @@ function animate() {
     state.selected.rotation.y += delta * 0.55;
   }
   keyLight.position.x = Math.cos(state.time * state.orbitSpeed) * 6;
-  activeCamera.lookAt(cameraTarget);
+  if (controls.enabled) controls.update();
   renderPass.camera = activeCamera;
   composer.render();
   frameCount += 1;

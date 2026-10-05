@@ -72,6 +72,7 @@ Fitur akhir:
 
 - Scene dan background;
 - PerspectiveCamera;
+- OrbitControls dasar: orbit, zoom, pan, damping, dan reset kamera;
 - WebGLRenderer;
 - BoxGeometry;
 - SphereGeometry;
@@ -1359,6 +1360,72 @@ animate();
 Namun kita akan menggunakan delta time agar kecepatan animasi lebih konsisten.
 
 ---
+
+## 51.1 Navigasi Kamera dengan OrbitControls
+
+Setelah scene dan animation loop berhasil berjalan, tambahkan navigasi kamera.
+OrbitControls menggerakkan kamera mengelilingi target sehingga material, lighting,
+dan shadow dapat diamati dari berbagai sudut. Transform objek tetap dikelola
+melalui `position`, `rotation`, dan `scale`.
+
+Tambahkan import di awal `main.js`, lalu buat kontrol setelah camera dan renderer:
+
+```js
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.8, 0);
+controls.enableDamping = true;
+controls.update();
+controls.saveState();
+```
+
+Letakkan `controls.update()` di animation loop, sebelum
+`renderer.render(scene, camera)`. Panggil juga ketika animasi objek dijeda agar
+navigasi kamera tetap berjalan. Damping memperhalus gerakan setelah input berhenti.
+Hapus pemanggilan `camera.lookAt()` setiap frame setelah memakai OrbitControls;
+arah pandang sekarang dikelola berdasarkan `controls.target`.
+
+| Input | Fungsi |
+| --- | --- |
+| Drag tombol kiri | Orbit kamera mengelilingi target |
+| Scroll | Zoom mendekat atau menjauh |
+| Drag tombol kanan | Pan kamera dan target |
+| Tombol reset | Kembali ke tampilan awal |
+
+Untuk satu kamera, hubungkan tombol reset ke `controls.reset()` setelah
+`saveState()`. Output pertemuan 6 memakai dua kamera: ketika berganti kamera,
+simpan posisi kamera lama dan salin `controls.target`, panggil
+`controls.dispose()`, lalu buat OrbitControls baru untuk kamera aktif.
+Reset output mengembalikan kamera Perspective, posisi awal, target, FOV, dan zoom.
+Pembuatan ulang kontrol juga membuang sisa damping dari gerakan sebelumnya.
+
+Jika memakai Vite, addon tersedia dari paket `three`. Untuk Live Server,
+tambahkan import map berikut di HTML sebelum script module:
+
+```html
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+    }
+  }
+</script>
+```
+
+Gunakan server HTTP dan koneksi internet untuk CDN. Core dan addon harus memakai
+versi yang sama.
+
+**Latihan dan pemeriksaan:**
+
+- [ ] Orbit mengubah sudut pandang tanpa mengubah transform objek.
+- [ ] Zoom dan pan bekerja; jelaskan pengaruh perubahan target terhadap orbit.
+- [ ] Kamera tetap dapat dinavigasi ketika animasi objek dijeda.
+- [ ] Pergantian Perspective/Orthographic mempertahankan posisi dan target.
+- [ ] Reset mengembalikan tampilan awal.
+
+Rujukan: [OrbitControls — dokumentasi Three.js](https://threejs.org/docs/pages/OrbitControls.html).
 
 # 52. Mengapa Tetap `requestAnimationFrame()`?
 

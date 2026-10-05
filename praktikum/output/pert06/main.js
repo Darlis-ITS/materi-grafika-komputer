@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 const container = document.querySelector("#sceneContainer");
 const scene = new THREE.Scene();
@@ -29,6 +30,44 @@ const state = {
 };
 
 const cameraTarget = new THREE.Vector3(0, 0.8, 0);
+let controls;
+const orbitDefaults = {
+  enabled: true, enableDamping: true, enablePan: true,
+  dampingFactor: 0.05, rotateSpeed: 1, zoomSpeed: 1,
+};
+const orbitSettings = { ...orbitDefaults };
+function applyOrbitSettings() {
+  Object.assign(controls, orbitSettings);
+  document.querySelector("#cameraDampingFactor").disabled = !orbitSettings.enableDamping;
+}
+function resetOrbitSettings() {
+  Object.assign(orbitSettings, orbitDefaults);
+  for (const [key, value] of Object.entries(orbitSettings)) {
+    const input = document.querySelector(`[data-orbit-setting="${key}"]`);
+    if (typeof value === "boolean") input.checked = value;
+    else {
+      input.value = value;
+      document.querySelector(`#${input.id}Value`).textContent = value.toFixed(2);
+    }
+  }
+}
+document.querySelectorAll("[data-orbit-setting]").forEach((input) => {
+  input.addEventListener("input", () => {
+    orbitSettings[input.dataset.orbitSetting] =
+      input.type === "checkbox" ? input.checked : Number(input.value);
+    if (input.type !== "checkbox")
+      document.querySelector(`#${input.id}Value`).textContent = Number(input.value).toFixed(2);
+    applyOrbitSettings();
+  });
+});
+function configureControls(target = cameraTarget) {
+  controls?.dispose();
+  controls = new OrbitControls(activeCamera, renderer.domElement);
+  controls.target.copy(target);
+  applyOrbitSettings();
+  controls.update();
+}
+configureControls();
 const mainCube = new THREE.Mesh(
   new THREE.BoxGeometry(1.25, 1.25, 1.25),
   new THREE.MeshStandardMaterial({
@@ -120,6 +159,38 @@ const lightMarker = new THREE.Mesh(
 );
 scene.add(lightMarker);
 
+// The directional light shines from its position toward its target.
+scene.add(directionalLight.target);
+const lightHelpers = new THREE.Group();
+const directionalHelper = new THREE.DirectionalLightHelper(directionalLight, 0.6, "#ffe066");
+const pointHelper = new THREE.PointLightHelper(pointLight, 0.25, "#4df3ff");
+const lightDirection = new THREE.Vector3();
+const lightOrigin = new THREE.Vector3();
+const lightTarget = new THREE.Vector3();
+const directionArrow = new THREE.ArrowHelper(
+  new THREE.Vector3(0, -1, 0), directionalLight.position, 1, "#ffe066",
+);
+lightHelpers.add(directionalHelper, pointHelper, directionArrow);
+scene.add(lightHelpers);
+
+function updateLightHelpers() {
+  lightMarker.position.copy(directionalLight.position);
+  directionalLight.updateWorldMatrix(true, false);
+  directionalLight.target.updateWorldMatrix(true, false);
+  directionalLight.getWorldPosition(lightOrigin);
+  directionalLight.target.getWorldPosition(lightTarget);
+  lightDirection.subVectors(lightTarget, lightOrigin);
+  const length = lightDirection.length();
+  directionArrow.visible = length > 0;
+  if (length > 0) {
+    directionArrow.position.copy(lightOrigin);
+    directionArrow.setDirection(lightDirection.normalize());
+    directionArrow.setLength(length, 0.4, 0.2);
+  }
+  directionalHelper.update();
+  pointHelper.update();
+}
+
 function updateCameraProjection() {
   const aspect = container.clientWidth / Math.max(container.clientHeight, 1);
   cameraPerspective.aspect = aspect;
@@ -184,10 +255,10 @@ function updateScene(deltaTime) {
   gallery.children.forEach((mesh, index) => {
     mesh.rotation.y += deltaTime * (0.35 + index * 0.15);
   });
-  activeCamera.lookAt(cameraTarget);
 }
 
 function render() {
+  updateLightHelpers();
   renderer.render(scene, activeCamera);
   updateHud();
 }
@@ -199,13 +270,19 @@ function animate() {
     state.time += deltaTime;
     updateScene(deltaTime);
   }
+  if (controls.enabled) controls.update();
   render();
 }
 
 function toggleCamera() {
+  const previousCamera = activeCamera;
+  const target = controls.target.clone();
   activeCamera =
     activeCamera === cameraPerspective ? cameraOrthographic : cameraPerspective;
-  activeCamera.position.copy(cameraPerspective.position);
+  activeCamera.position.copy(previousCamera.position);
+  configureControls(target);
+  document.querySelector("#cameraSelect").value =
+    activeCamera === cameraPerspective ? "perspective" : "orthographic";
   updateCameraProjection();
 }
 
@@ -221,6 +298,19 @@ function toggleAnimation() {
 }
 
 function reset() {
+  lightHelpers.visible = true;
+  document.querySelector("#lightHelperControl").checked = true;
+  resetOrbitSettings();
+  activeCamera = cameraPerspective;
+  cameraPerspective.position.set(4.8, 3.6, 6.5);
+  cameraOrthographic.position.copy(cameraPerspective.position);
+  cameraPerspective.fov = 50;
+  cameraPerspective.zoom = cameraOrthographic.zoom = 1;
+  configureControls();
+  updateCameraProjection();
+  document.querySelector("#cameraSelect").value = "perspective";
+  document.querySelector("#fovControl").value = 50;
+  document.querySelector("#fovValue").textContent = "50°";
   mainCube.position.set(-1.4, 1, 0);
   mainCube.rotation.set(0, 0, 0);
   directionalLight.position.set(3, 6, 4);
@@ -253,6 +343,9 @@ document.querySelector("#cameraSelect").addEventListener("change", (event) => {
 document.querySelector("#cameraButton").addEventListener("click", toggleCamera);
 document.querySelector("#lightOrbitButton").addEventListener("click", () => {
   state.lightOrbit = !state.lightOrbit;
+});
+document.querySelector("#lightHelperControl").addEventListener("change", (event) => {
+  lightHelpers.visible = event.target.checked;
 });
 document
   .querySelector("#galleryButton")

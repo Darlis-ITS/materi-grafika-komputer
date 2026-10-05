@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Three.js Interactive 3D Application - Praktikum 7</title>
     <link rel="stylesheet" href="./style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+        }
+      }
+    </script>
   </head>
   <body>
     <main class="app-shell">
@@ -97,6 +105,18 @@
             step="0.05"
             value="0.45"
           />
+          <fieldset class="orbit-settings">
+            <legend>OrbitControls · Camera</legend>
+            <label><input type="checkbox" data-orbit-setting="enabled" checked /> Aktifkan kontrol kamera</label>
+            <label><input type="checkbox" data-orbit-setting="enablePan" checked /> Izinkan pan</label>
+            <label><input type="checkbox" data-orbit-setting="enableDamping" checked /> Damping</label>
+            <label class="range-row" for="cameraDampingFactor"><span>Damping factor</span><output id="cameraDampingFactorValue">0.05</output></label>
+            <input id="cameraDampingFactor" data-orbit-setting="dampingFactor" type="range" min="0.01" max="0.25" step="0.01" value="0.05" />
+            <label class="range-row" for="cameraRotateSpeed"><span>Camera rotate speed</span><output id="cameraRotateSpeedValue">1.00</output></label>
+            <input id="cameraRotateSpeed" data-orbit-setting="rotateSpeed" type="range" min="0.1" max="3" step="0.1" value="1" />
+            <label class="range-row" for="cameraZoomSpeed"><span>Camera zoom speed</span><output id="cameraZoomSpeedValue">1.00</output></label>
+            <input id="cameraZoomSpeed" data-orbit-setting="zoomSpeed" type="range" min="0.1" max="3" step="0.1" value="1" />
+          </fieldset>
           <div class="button-grid">
             <button id="environmentButton">Environment (E)</button
             ><button id="resetButton">Reset (R)</button>
@@ -106,11 +126,14 @@
             ><button id="solarButton">Solar (S)</button>
           </div>
           <div class="keyboard-help">
-            <b>Interaksi</b><span>Hover: emissive + scale 1.06</span
+            <b>Interaksi</b>
+            <span>Drag kiri: orbit · scroll: zoom</span>
+            <span>Drag kanan: pan · drag tidak memilih objek</span>
+            <span>Hover: emissive + scale 1.06</span
             ><span>Click: pilih objek + panel informasi</span
             ><span>1 / 2 / 3: ganti animation clip</span
             ><span>E: environment · S: solar system</span
-            ><span>R: reset · drag tidak diperlukan</span>
+            ><span>R: reset scene dan kamera</span>
           </div>
           <div id="logPanel" class="log-panel">
             Raycaster siap. Arahkan pointer ke objek.

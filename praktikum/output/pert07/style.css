@@ -216,3 +216,16 @@ button:hover {
     grid-template-columns: 1fr;
   }
 }
+.orbit-settings {
+  display: grid;
+  gap: 9px;
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid #28647d;
+  border-radius: 11px;
+}
+.orbit-settings legend { padding: 0 5px; font-weight: 700; }
+.orbit-settings > label { font-size: 12px; }
+.orbit-settings input[type="range"] { width: 100%; }
+.orbit-settings input[type="checkbox"] { margin-right: 6px; }
+.orbit-settings input:disabled { opacity: 0.4; }
