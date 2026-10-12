@@ -5,6 +5,9 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
+import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+
 const $ = (selector) => document.querySelector(selector);
 const container = $("#sceneContainer");
 const scene = new THREE.Scene();
@@ -21,12 +24,15 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.85;
 container.appendChild(renderer.domElement);
 const renderPass = new RenderPass(scene, activeCamera);
-const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0, 0.7, 0.35);
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.55, 0.3, 3.0);
 const composer = new EffectComposer(renderer);
 composer.addPass(renderPass);
 composer.addPass(bloomPass);
+composer.addPass(new OutputPass());
 
 const clock = new THREE.Clock();
 const raycaster = new THREE.Raycaster();
@@ -34,6 +40,8 @@ const pointer = new THREE.Vector2();
 const interactiveObjects = [];
 const state = {
   environment: true,
+  panorama: true,
+  bloom: true,
   solar: true,
   orbitSpeed: 0.45,
   roughness: 0.35,
@@ -91,12 +99,40 @@ function configureControls(target = cameraTarget) {
 }
 configureControls();
 
-const environmentTexture = createEnvironmentTexture();
-environmentTexture.mapping = THREE.EquirectangularReflectionMapping;
-scene.environment = environmentTexture;
+let panoramaTexture = createEnvironmentTexture();
+panoramaTexture.colorSpace = THREE.SRGBColorSpace;
+panoramaTexture.mapping = THREE.EquirectangularReflectionMapping;
+const pmrem = new THREE.PMREMGenerator(renderer);
+let environmentTarget = pmrem.fromEquirectangular(panoramaTexture);
+let environmentTexture = environmentTarget.texture;
+scene.backgroundIntensity = 0.35;
+scene.environmentIntensity = 0.3;
+applyEnvironment();
+pmrem.compileEquirectangularShader();
+new HDRLoader().load(
+  new URL("./assets/studio_small_09_1k.hdr", import.meta.url).href,
+  (texture) => {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    const nextTarget = pmrem.fromEquirectangular(texture);
+    panoramaTexture.dispose();
+    environmentTarget.dispose();
+    panoramaTexture = texture;
+    environmentTarget = nextTarget;
+    environmentTexture = nextTarget.texture;
+    applyEnvironment();
+    pmrem.dispose();
+    $("#panoramaStatus").textContent = "Studio Small 09 - HDR 1K";
+  },
+  undefined,
+  (error) => {
+    pmrem.dispose();
+    $("#panoramaStatus").textContent = "HDR gagal dimuat - panorama procedural aktif";
+    console.warn("HDR loading error", error);
+  },
+);
 
-scene.add(new THREE.HemisphereLight("#c9edff", "#12304a", 1.7));
-const keyLight = new THREE.DirectionalLight("#ffffff", 3.2);
+scene.add(new THREE.HemisphereLight("#c9edff", "#12304a", 0.7));
+const keyLight = new THREE.DirectionalLight("#ffffff", 1.8);
 keyLight.position.set(5, 8, 4);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(2048, 2048);
@@ -124,25 +160,34 @@ hierarchyGroup.name = "Hierarchy Parent Group";
 hierarchyGroup.position.set(-2.8, 1.4, 0);
 const parentMesh = new THREE.Mesh(
   new THREE.BoxGeometry(1.4, 1.4, 1.4),
-  new THREE.MeshStandardMaterial({
-    color: "#4df3ff",
-    roughness: 0.25,
-    metalness: 0.4,
+  new THREE.MeshPhysicalMaterial({
+    color: "#c8f5ff",
+    roughness: 0.08,
+    metalness: 0,
+    transmission: 0.95,
+    thickness: 1.4,
+    ior: 1.45,
+    opacity: 1,
   }),
 );
-parentMesh.name = "Parent Mesh";
-parentMesh.castShadow = true;
+parentMesh.name = "Parent Mesh - Glass (transmission 0.95)";
+// Transmission models glass; opacity stays 1 for physically based refraction.
+parentMesh.castShadow = false;
 const childMesh = new THREE.Mesh(
   new THREE.SphereGeometry(0.42, 24, 16),
   new THREE.MeshStandardMaterial({
-    color: "#ffca6a",
-    roughness: 0.2,
-    metalness: 0.7,
+    color: "#ffdd22",
+    emissive: "#ffcc00",
+    emissiveIntensity: 5,
+    roughness: 0.3,
+    metalness: 0,
   }),
 );
 childMesh.name = "Child Mesh (local 1, 0.9, 0)";
 childMesh.position.set(1, 0.9, 0);
-childMesh.castShadow = true;
+childMesh.castShadow = false;
+childMesh.material.userData.preserveEmission = true;
+childMesh.add(new THREE.PointLight("#ffcc33", 5, 5, 2));
 hierarchyGroup.add(parentMesh, childMesh);
 scene.add(hierarchyGroup);
 interactiveObjects.push(parentMesh, childMesh);
@@ -153,15 +198,18 @@ solarSystem.position.set(1.8, 0, -2.4);
 const sun = mesh(
   new THREE.SphereGeometry(0.7, 32, 20),
   new THREE.MeshStandardMaterial({
-    color: "#ffae35",
-    emissive: "#7a3000",
-    emissiveIntensity: 0.7,
+    color: "#ffdd22",
+    emissive: "#ffcc00",
+    emissiveIntensity: 5,
     roughness: 0.35,
     metalness: 0.05,
   }),
   "Sun",
 );
 sun.position.y = 1.1;
+sun.castShadow = false;
+sun.material.userData.preserveEmission = true;
+sun.add(new THREE.PointLight("#ffcc33", 8, 6, 2));
 const earthOrbit = new THREE.Group();
 earthOrbit.name = "Earth Orbit";
 earthOrbit.position.y = 1.1;
@@ -217,6 +265,18 @@ roughnessValues.forEach((roughness, row) =>
   }),
 );
 scene.add(gallery);
+
+// Dedicated silver sample remains independent of the gallery sliders.
+const silver = mesh(
+  new THREE.SphereGeometry(0.85, 64, 40),
+  new THREE.MeshStandardMaterial({
+    color: "#eeeeee", metalness: 1, roughness: 0.08, envMapIntensity: 1,
+  }),
+  "Silver - HDR reflection",
+);
+silver.position.set(3.1, 0.9, 1.4);
+scene.add(silver);
+interactiveObjects.push(silver);
 
 const loader = new GLTFLoader();
 const modelUrl = new URL("./Duck.glb", import.meta.url).href;
@@ -359,7 +419,7 @@ function setEmissive(object, enabled) {
       ? child.material
       : [child.material];
     materials.forEach((material) => {
-      if (!("emissive" in material)) return;
+      if (!("emissive" in material) || material.userData.preserveEmission) return;
       if (!material.userData.originalEmissive) {
         material.userData.originalEmissive = material.emissive.clone();
         material.userData.originalEmissiveIntensity =
@@ -450,7 +510,6 @@ renderer.domElement.addEventListener("pointermove", (event) => {
   }
   state.hovered = next;
   $("#hoverInfo").textContent = next?.name || "-";
-  bloomPass.strength = next ? 0.12 : 0;
   if (next && next !== state.selected) {
     setEmissive(next, true);
     setScaleFeedback(next, 1.06);
@@ -466,7 +525,6 @@ renderer.domElement.addEventListener("pointerleave", () => {
   }
   state.hovered = null;
   $("#hoverInfo").textContent = "-";
-  bloomPass.strength = 0;
 });
 renderer.domElement.addEventListener("click", (event) => {
   if (suppressSelection || event.button !== 0) return;
@@ -520,6 +578,11 @@ $("#orbitControl").addEventListener("input", (event) => {
   state.orbitSpeed = Number(event.target.value);
   $("#orbitValue").textContent = state.orbitSpeed.toFixed(2);
 });
+$("#panoramaButton").addEventListener("click", togglePanorama);
+$("#bloomButton").addEventListener("click", () => {
+  state.bloom = !state.bloom;
+  applyBloom();
+});
 $("#environmentButton").addEventListener("click", toggleEnvironment);
 $("#resetButton").addEventListener("click", resetScene);
 $("#solarButton").addEventListener("click", () => {
@@ -531,6 +594,7 @@ $("#clip2Button").addEventListener("click", () => playClip(1));
 $("#clip3Button").addEventListener("click", () => playClip(2));
 window.addEventListener("keydown", (event) => {
   if (event.target.matches("input, select")) return;
+  if (event.key.toLowerCase() === "p") togglePanorama();
   if (event.key.toLowerCase() === "e") toggleEnvironment();
   if (event.key.toLowerCase() === "s") {
     state.solar = !state.solar;
@@ -545,13 +609,29 @@ function updatePbrGallery() {
     object.material.metalness = state.metalness;
   });
 }
+function applyEnvironment() {
+  scene.environment = state.environment ? environmentTexture : null;
+  scene.background = state.panorama ? panoramaTexture : new THREE.Color("#020812");
+  $("#environmentInfo").textContent = state.environment ? "ON" : "OFF";
+  $("#environmentButton").textContent = `Refleksi: ${state.environment ? "ON" : "OFF"} (E)`;
+  $("#environmentButton").setAttribute("aria-pressed", String(state.environment));
+  $("#panoramaButton").textContent = `Panorama: ${state.panorama ? "ON" : "OFF"} (P)`;
+  $("#panoramaButton").setAttribute("aria-pressed", String(state.panorama));
+}
+function togglePanorama() {
+  state.panorama = !state.panorama;
+  applyEnvironment();
+  log(`Panorama ${state.panorama ? "ON" : "OFF"}; refleksi diatur terpisah dengan E.`);
+}
+function applyBloom() {
+  bloomPass.enabled = state.bloom;
+  $("#bloomButton").textContent = `Bloom: ${state.bloom ? "ON" : "OFF"}`;
+  $("#bloomButton").setAttribute("aria-pressed", String(state.bloom));
+}
 function toggleEnvironment() {
   state.environment = !state.environment;
-  scene.environment = state.environment ? environmentTexture : null;
-  $("#environmentInfo").textContent = state.environment ? "ON" : "OFF";
-  log(
-    `Environment ${state.environment ? "ON: PBR mendapat refleksi" : "OFF: hanya lighting langsung"}`,
-  );
+  applyEnvironment();
+  log(`Refleksi environment ${state.environment ? "ON" : "OFF"}`);
 }
 function resetScene() {
   resetOrbitSettings();
@@ -568,10 +648,17 @@ function resetScene() {
   $("#fovValue").textContent = "52°";
   state.environment = true;
   state.solar = true;
+  [state.selected, state.hovered].forEach((object) => {
+    setEmissive(object, false);
+    setScaleFeedback(object, 1);
+  });
   state.selected = null;
   state.hovered = null;
-  scene.environment = environmentTexture;
-  $("#environmentInfo").textContent = "ON";
+  state.panorama = true;
+  state.bloom = true;
+  applyEnvironment();
+  applyBloom();
+  $("#hoverInfo").textContent = "-";
   $("#selectedInfo").textContent = "-";
   updateInfo(null);
   hierarchyGroup.rotation.set(0, 0, 0);

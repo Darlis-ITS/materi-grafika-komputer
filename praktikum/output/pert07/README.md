@@ -17,6 +17,30 @@ dapat dimuat. Import map di HTML memetakan `"three"` dan `"three/addons/"` ke
 Three.js versi `0.185.1` di jsDelivr; koneksi internet diperlukan saat menggunakan
 server statis.
 
+## Panorama, kaca, silver, dan bloom
+
+- **Panorama (P)** menyalakan/mematikan latar 360?. **Refleksi (E)** mengatur `scene.environment` secara terpisah, sehingga silver tetap reflektif ketika latar dimatikan.
+- **Bloom** menyalakan/mematikan halo cahaya. Sphere kuning pada hierarchy dan Sun memakai emissive kuning dengan intensitas 5 serta point light. Hover/selection tidak mengganti emisi keduanya.
+- Kubus parent menggunakan `MeshPhysicalMaterial`, `transmission: 0.95`, `thickness: 1.4`, `ior: 1.45`, dan `roughness: 0.08` untuk kaca transparan/refraktif. `opacity: 1` disengaja karena transparansi kaca diatur melalui transmission. Shadow kubus dimatikan karena shadow map biasa tidak memodelkan transmisi kaca.
+- Sphere besar di kanan depan menggunakan warna silver, `metalness: 1`, `roughness: 0.08`, dan refleksi HDR yang diproses dengan PMREM. Slider gallery tidak mengubah material silver/kaca.
+- Refleksi ini berbasis panorama studio statis: objek lokal yang bergerak tidak ikut terpantul. Ini bukan ray tracing atau refleksi dinamis menggunakan CubeCamera.
+- Reset (R) mengaktifkan kembali panorama, refleksi, dan bloom, serta membersihkan highlight/scale interaksi.
+
+### Rekomendasi format panorama
+
+| Format | Kapan digunakan |
+| --- | --- |
+| **Equirectangular / spherical HDR (dipakai)** | Satu gambar 2:1 untuk latar 360? dan pencahayaan/refleksi PBR; mudah dimuat dan diganti. HDR menyimpan rentang intensitas cahaya untuk refleksi metal yang lebih realistis. |
+| Cubemap / skybox enam sisi | Cocok jika aset sudah tersedia sebagai enam gambar `px, nx, py, ny, pz, nz`; perlu memastikan orientasi dan sambungan antar-sisi. Dapat dimuat dengan `CubeTextureLoader`. |
+
+Skybox adalah cara menampilkan lingkungan, sedangkan cubemap dan equirectangular adalah format pemetaannya. Equirectangular juga dapat menjadi latar skybox di Three.js.
+
+Aset lokal: `assets/studio_small_09_1k.hdr` (sekitar 1.54 MiB), **Studio Small 09** oleh **Sergej Majboroda**, dari [Poly Haven](https://polyhaven.com/a/studio_small_09), lisensi **CC0**. Pilihan studio memberi pola softbox yang jelas pada silver dan kaca. Resolusi 1K ringan untuk praktikum; gunakan 2K/4K jika detail latar lebih penting. Lihat `assets/README.md` untuk sumber unduhan.
+
+`HDRLoader` memuat aset lokal; `PMREMGenerator` menyiapkan refleksi sesuai roughness. Jika HDR gagal dimuat, panorama procedural tetap tersedia dan panel menampilkan status fallback. Rangkaian postprocessing: `RenderPass -> UnrealBloomPass -> OutputPass`, dengan ACES tone mapping. Bloom memakai threshold 3 untuk terutama menangkap emisi HDR; highlight HDR lain yang sangat terang juga dapat berpendar.
+
+Referensi: [HDRLoader](https://threejs.org/docs/pages/HDRLoader.html), [PMREMGenerator](https://threejs.org/docs/pages/PMREMGenerator.html), [OutputPass](https://threejs.org/docs/pages/OutputPass.html).
+
 ## Parameter control
 
 | Parameter OrbitControls | Fungsi / nilai awal |
@@ -139,9 +163,9 @@ Challenge F menyimpan warna emissive asli pada `material.userData.originalEmissi
 
 ### Environment dan Bloom
 
-Prototype membuat environment equirectangular sederhana menggunakan CanvasTexture sehingga tidak membutuhkan file HDR eksternal. Texture dipakai pada `scene.environment`, bukan hanya sebagai background. Challenge H dapat diuji dengan tombol **Environment (E)**. Saat OFF, material PBR kehilangan kontribusi refleksi environment sehingga perbedaan material metal lebih mudah diamati.
+Prototype memuat panorama HDR lokal untuk background dan environment; CanvasTexture menjadi fallback jika pemuatan gagal. Challenge H dapat diuji dengan tombol **Environment (E)**. Saat OFF, material PBR kehilangan kontribusi refleksi environment sehingga perbedaan material metal lebih mudah diamati.
 
-Rendering menggunakan `EffectComposer`, `RenderPass`, dan `UnrealBloomPass`. Saat hover, material diberi emissive hijau tosca dengan intensitas tinggi sehingga cahaya menyebar ke area sekitarnya. Background dan environment dibuat lebih gelap agar bloom dan feedback hover lebih kontras.
+Rendering menggunakan `EffectComposer`, `RenderPass`, `UnrealBloomPass`, dan `OutputPass`. Bloom aktif secara permanen pada emisi sphere kuning dan dapat di-toggle melalui panel. Hover memberi highlight pada material lain tanpa memadamkan emisi sphere kuning.
 
 ## GLB bertekstur yang digunakan
 
