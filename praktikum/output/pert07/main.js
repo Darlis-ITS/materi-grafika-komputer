@@ -109,9 +109,33 @@ scene.backgroundIntensity = 0.35;
 scene.environmentIntensity = 0.3;
 applyEnvironment();
 pmrem.compileEquirectangularShader();
-new HDRLoader().load(
-  new URL("./assets/studio_small_09_1k.hdr", import.meta.url).href,
-  (texture) => {
+const panoramaOptions = {
+  studio: { label: "Studio Small 09 - HDR 1K", url: new URL("./assets/studio_small_09_1k.hdr", import.meta.url).href },
+  ladybrand: { label: "Ladybrand Heritage House - HDR 1K", url: new URL("./assets/ladybrand_heritage_house_1k.hdr", import.meta.url).href },
+  procedural: { label: "Panorama procedural" },
+};
+let activePanorama = "procedural";
+let panoramaRequest = 0;
+async function selectPanorama(key) {
+  const option = panoramaOptions[key];
+  const request = ++panoramaRequest;
+  $("#panoramaSelect").value = key;
+  if (key === activePanorama) {
+    $("#panoramaStatus").textContent = option.label;
+    return;
+  }
+  $("#panoramaStatus").textContent = `Memuat ${option.label}...`;
+  let texture;
+  try {
+    texture = option.url
+      ? await new HDRLoader().loadAsync(option.url)
+      : createEnvironmentTexture();
+    // Only the latest selection may replace the active environment.
+    if (request !== panoramaRequest) {
+      texture.dispose();
+      return;
+    }
+    if (!option.url) texture.colorSpace = THREE.SRGBColorSpace;
     texture.mapping = THREE.EquirectangularReflectionMapping;
     const nextTarget = pmrem.fromEquirectangular(texture);
     panoramaTexture.dispose();
@@ -119,17 +143,19 @@ new HDRLoader().load(
     panoramaTexture = texture;
     environmentTarget = nextTarget;
     environmentTexture = nextTarget.texture;
+    activePanorama = key;
     applyEnvironment();
-    pmrem.dispose();
-    $("#panoramaStatus").textContent = "Studio Small 09 - HDR 1K";
-  },
-  undefined,
-  (error) => {
-    pmrem.dispose();
-    $("#panoramaStatus").textContent = "HDR gagal dimuat - panorama procedural aktif";
+    $("#panoramaStatus").textContent = option.label;
+  } catch (error) {
+    texture?.dispose();
+    if (request !== panoramaRequest) return;
+    $("#panoramaSelect").value = activePanorama;
+    $("#panoramaStatus").textContent = `HDR gagal dimuat - ${panoramaOptions[activePanorama].label} tetap aktif`;
     console.warn("HDR loading error", error);
-  },
-);
+  }
+}
+$("#panoramaSelect").addEventListener("change", (event) => selectPanorama(event.target.value));
+selectPanorama("studio");
 
 scene.add(new THREE.HemisphereLight("#c9edff", "#12304a", 0.7));
 const keyLight = new THREE.DirectionalLight("#ffffff", 1.8);
@@ -578,6 +604,25 @@ $("#orbitControl").addEventListener("input", (event) => {
   state.orbitSpeed = Number(event.target.value);
   $("#orbitValue").textContent = state.orbitSpeed.toFixed(2);
 });
+const bloomDefaults = { emissiveIntensity: 5, bloomIntensity: 0.55, bloomRadius: 0.3 };
+const bloomSettings = { ...bloomDefaults };
+function applyBloomSettings() {
+  childMesh.material.emissiveIntensity = bloomSettings.emissiveIntensity;
+  sun.material.emissiveIntensity = bloomSettings.emissiveIntensity;
+  bloomPass.strength = bloomSettings.bloomIntensity;
+  bloomPass.radius = bloomSettings.bloomRadius;
+  for (const [key, value] of Object.entries(bloomSettings)) {
+    $(`#${key}Control`).value = value;
+    $(`#${key}Value`).textContent = value.toFixed(2);
+  }
+}
+for (const key of Object.keys(bloomSettings)) {
+  $(`#${key}Control`).addEventListener("input", (event) => {
+    bloomSettings[key] = Number(event.target.value);
+    applyBloomSettings();
+  });
+}
+applyBloomSettings();
 $("#panoramaButton").addEventListener("click", togglePanorama);
 $("#bloomButton").addEventListener("click", () => {
   state.bloom = !state.bloom;
@@ -656,6 +701,9 @@ function resetScene() {
   state.hovered = null;
   state.panorama = true;
   state.bloom = true;
+  Object.assign(bloomSettings, bloomDefaults);
+  applyBloomSettings();
+  selectPanorama("studio");
   applyEnvironment();
   applyBloom();
   $("#hoverInfo").textContent = "-";

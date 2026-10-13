@@ -19,11 +19,15 @@ server statis.
 
 ## Panorama, kaca, silver, dan bloom
 
+- Dropdown **Skybox / panorama** memilih Studio Small 09, Ladybrand Heritage House (`assets/ladybrand_heritage_house_1k.hdr`), atau panorama procedural. Pilihan memperbarui latar dan refleksi sesuai toggle masing-masing. Selama pemuatan, panorama sebelumnya tetap tersedia; jika gagal, pilihan kembali ke panorama aktif. Pergantian cepat hanya menerapkan pilihan terakhir.
+- **Emissive intensity** (0?20, awal 5) mengatur emisi sphere kuning hierarchy dan Sun. **Bloom intensity** (0?3, awal 0.55) mengatur kekuatan halo; **Bloom radius** (0?1, awal 0.30) mengatur sebarannya. Nilai tampil dan diterapkan langsung. Bloom tetap menggunakan threshold 3, sehingga emisi rendah dapat tidak menghasilkan halo; highlight HDR lain juga bisa terkena bloom. Point light tidak diubah oleh slider emisi.
+- **Reset (R)** juga mengembalikan pilihan Studio Small 09 serta ketiga parameter emisi/bloom ke nilai awal.
+
 - **Panorama (P)** menyalakan/mematikan latar 360?. **Refleksi (E)** mengatur `scene.environment` secara terpisah, sehingga silver tetap reflektif ketika latar dimatikan.
 - **Bloom** menyalakan/mematikan halo cahaya. Sphere kuning pada hierarchy dan Sun memakai emissive kuning dengan intensitas 5 serta point light. Hover/selection tidak mengganti emisi keduanya.
 - Kubus parent menggunakan `MeshPhysicalMaterial`, `transmission: 0.95`, `thickness: 1.4`, `ior: 1.45`, dan `roughness: 0.08` untuk kaca transparan/refraktif. `opacity: 1` disengaja karena transparansi kaca diatur melalui transmission. Shadow kubus dimatikan karena shadow map biasa tidak memodelkan transmisi kaca.
 - Sphere besar di kanan depan menggunakan warna silver, `metalness: 1`, `roughness: 0.08`, dan refleksi HDR yang diproses dengan PMREM. Slider gallery tidak mengubah material silver/kaca.
-- Refleksi ini berbasis panorama studio statis: objek lokal yang bergerak tidak ikut terpantul. Ini bukan ray tracing atau refleksi dinamis menggunakan CubeCamera.
+- Refleksi ini berbasis panorama yang dipilih: objek lokal yang bergerak tidak ikut terpantul. Ini bukan ray tracing atau refleksi dinamis menggunakan CubeCamera.
 - Reset (R) mengaktifkan kembali panorama, refleksi, dan bloom, serta membersihkan highlight/scale interaksi.
 
 ### Rekomendasi format panorama
